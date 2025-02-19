@@ -5,14 +5,14 @@ import androidx.lifecycle.ViewModel
 
 data class Expense(val description: String, val amount: Double, val payer: String)
 
-data class Group(val name: String, val members: List<String>, val totalExpenses: Double = 0.0)
+//data class Group(val name: String, val members: List<String>, val totalExpenses: Double = 0.0)
 
-data class Exp(val description: String, val amount: Double, val payer: String)
+//data class Exp(val description: String, val amount: Double, val payer: String)
 
-data class Grp(
+data class Group(
     val name: String,
     val members: List<String> = emptyList(),
-    val expenses: List<Exp> = emptyList()
+    val expenses: List<Expense> = emptyList(),
 )
 
 class SplitMoneyViewModel : ViewModel() {
@@ -22,14 +22,14 @@ class SplitMoneyViewModel : ViewModel() {
     private val _members = mutableStateListOf<String>()
     val members: List<String> get() = _members
 
-    private val _groups = mutableStateListOf<Grp>()
-    val groups: List<Grp> get() = _groups
+    private val _groups = mutableStateListOf<Group>()
+    val groups: List<Group> get() = _groups
 
 //    fun addGroup(name: String, members: List<String>, totalExpenses: Double) {
 //        _groups.add(Group(name, members, totalExpenses))
 //    }
 
-    fun addExpenseToGroup(groupName: String, expense: Exp) {
+    fun addExpenseToGroup(groupName: String, expense: Expense) {
         val group = _groups.find { it.name == groupName }
         group?.let {
             val updateExpense = it.expenses + expense
@@ -79,6 +79,7 @@ class SplitMoneyViewModel : ViewModel() {
         val group = _groups.find { it.name == groupName }
         return group?.let {
             val totalAmount = it.expenses.sumOf { expense -> expense.amount }
+
             val equalShare = totalAmount / it.members.size
             val balances = mutableMapOf<String, Double>()
             it.members.forEach { member ->

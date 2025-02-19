@@ -13,28 +13,31 @@ fun Navigation(viewModel: SplitMoneyViewModel) {
         composable("home") {
             HomeScreen(
                 viewModel = viewModel,
-                onGroupClick = { group -> navController.navigate("balanceView/${group.name}") },
+                onGroupClick = { groupName -> navController.navigate("balanceView/${groupName}") },
                 onAddExpenseClick = {
                     navController.navigate(("addExpense"))
-                })
+                },
+                onAddGroupClick = { navController.navigate("addGroup") })
         }
 
-        composable("addExpense") {
+        composable("addExpense/{groupName}") { backStackEntry ->
+            val groupName = backStackEntry.arguments?.getString("groupName")
+
             AddExpenseScreen(
                 viewModel = viewModel,
+                groupName = groupName ?: "",
                 onExpenseAdded = { navController.popBackStack() })
 
 
         }
 
-        composable("balanceView/{groupName}") {
-            navBackStackEntry ->
+        composable("balanceView/{groupName}") { navBackStackEntry ->
             val groupName = navBackStackEntry.arguments?.getString("groupName")
             if (groupName != null) {
                 BalanceSummaryScreen(
                     viewModel = viewModel,
                     groupName = groupName,
-                    onBlockClick =  {
+                    onBlockClick = {
                         navController.popBackStack()
                     }
                 )

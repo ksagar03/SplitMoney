@@ -16,24 +16,32 @@ import kotlin.math.abs
 fun BalanceSummaryScreen(
     viewModel: SplitMoneyViewModel,
     groupName: String,
-    onBlockClick: () -> Unit, ) {
-    val group = viewModel.groups.find { it.name == groupName }
-    val balances = group?.let {
-        viewModel.calculateSplit(
-            groupName,
-            members = group.members
-        )
-    } ?: emptyMap()
+    onBlockClick: () -> Unit,
+) {
+//    val group = viewModel.groups.find { it.name == groupName }
+//    val balances = group?.let {
+//        viewModel.calculateSplit(
+//            groupName,
+//            members = group.members
+//        )
+//    } ?: emptyMap()
+    val balances = viewModel.calculateBalances(groupName)
 
-    Column(modifier = Modifier.padding(16.dp)){
-        Text("Balance Summary for $groupName",
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            "Balance Summary for $groupName",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp))
-        if(balances.isEmpty()){
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        if (balances.isEmpty()) {
             Text("no Expenses added yet")
         } else {
-            balances.forEach{ (member, balance) ->
-                Text("$member: ${if (balance >=0) "gets" else "owes"} ${abs(balance)}", modifier = Modifier.padding(vertical = 4.dp))
+            balances.forEach { (member, balance) ->
+                Text(
+                    "$member: ${if (balance >= 0) "gets" else "owes"} ₹${abs(balance)}",
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
             }
         }
 
