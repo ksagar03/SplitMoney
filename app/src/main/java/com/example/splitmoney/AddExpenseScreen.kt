@@ -20,7 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AddExpenseScreen(viewModel: SplitMoneyViewModel, onExpenseAdded: () -> Unit) {
+fun AddExpenseScreen(
+    viewModel: SplitMoneyViewModel,
+    groupName: String,
+    onExpenseAdded: () -> Unit
+) {
     var expenseDescription by remember { mutableStateOf("") }
     var expenseAmount by remember { mutableStateOf("") }
     var selectedPayer by remember { mutableStateOf("") }
@@ -46,15 +50,66 @@ fun AddExpenseScreen(viewModel: SplitMoneyViewModel, onExpenseAdded: () -> Unit)
             label = { Text("User Expenses Amount") }
         )
 
-        val members = listOf("Alice", "Sagar", "Surya", "Maa")
+//        val members = listOf("Alice", "Sagar", "Surya", "Maa")
+//        var expanded by remember { mutableStateOf(false) }
+//        Box(modifier = Modifier.fillMaxWidth()) {
+//            Text(
+//                text = selectedPayer.ifEmpty { "Select Payer" },
+//                modifier = Modifier
+//                    .clickable { expanded = true }
+//                    .padding(16.dp)
+//
+//
+//            )
+//            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+//                members.forEach { member ->
+//                    DropdownMenuItem(
+//                        onClick = {
+//                            selectedPayer = member
+//                            expanded = false
+//
+//                        },
+//                        text = { Text(member) }
+//                    )
+//                }
+//
+//            }
+//        }
+//
+//        Button(
+//            onClick = {
+//                // Validate input before adding expense
+//                if (expenseDescription.isNotBlank() && expenseAmount.isNotBlank() && selectedPayer.isNotBlank()) {
+//                    val amount = expenseAmount.toDoubleOrNull()
+//                    if (amount != null) {
+//                        viewModel.addExpense(expenseDescription, amount, selectedPayer)
+//                        // Clear fields after adding
+//                        expenseDescription = ""
+//                        expenseAmount = ""
+//                        selectedPayer = ""
+//                    } else {
+//                        // Handle invalid amount (e.g., show an error message)
+//                        errorMessage = "Invalid amount entered"
+//                    }
+//                } else {
+//                    // Handle empty fields (e.g., show an error message)
+//                    errorMessage = "Please fill all fields"
+//                }
+//            },
+//            modifier = Modifier.fillMaxWidth()
+//        ) {
+//            Text("Add Expense")
+//        }
+
+        val group = viewModel.groups.find { it.name == groupName }
+        val members = group?.members ?: emptyList()
         var expanded by remember { mutableStateOf(false) }
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = selectedPayer.ifEmpty { "Select Payer" },
+                text = selectedPayer.ifEmpty { "Selected Payer" },
                 modifier = Modifier
                     .clickable { expanded = true }
                     .padding(16.dp)
-
 
             )
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -63,39 +118,30 @@ fun AddExpenseScreen(viewModel: SplitMoneyViewModel, onExpenseAdded: () -> Unit)
                         onClick = {
                             selectedPayer = member
                             expanded = false
-
                         },
                         text = { Text(member) }
                     )
                 }
-
             }
         }
 
-        Button(
-            onClick = {
-                // Validate input before adding expense
-                if (expenseDescription.isNotBlank() && expenseAmount.isNotBlank() && selectedPayer.isNotBlank()) {
-                    val amount = expenseAmount.toDoubleOrNull()
-                    if (amount != null) {
-                        viewModel.addExpense(expenseDescription, amount, selectedPayer)
-                        // Clear fields after adding
-                        expenseDescription = ""
-                        expenseAmount = ""
-                        selectedPayer = ""
-                    } else {
-                        // Handle invalid amount (e.g., show an error message)
-                        errorMessage = "Invalid amount entered"
-                    }
-                } else {
-                    // Handle empty fields (e.g., show an error message)
-                    errorMessage = "Please fill all fields"
+        Button(onClick = {
+            if (expenseDescription.isEmpty() || expenseAmount.isEmpty() || selectedPayer.isEmpty()) {
+                errorMessage = "Please fill all the fiels"
+            } else {
+                try {
+                    val amount = expenseAmount.toDouble()
+                    val expense = Expense(expenseDescription, amount, selectedPayer)
+                    viewModel.addExpenseToGroup(groupName, expense)
+                    onExpenseAdded()
+                } catch (e: NumberFormatException) {
+                    errorMessage = "invalid amount. Please enter a valid number."
                 }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
+            }
+        }) {
             Text("Add Expense")
         }
+
     }
 
 

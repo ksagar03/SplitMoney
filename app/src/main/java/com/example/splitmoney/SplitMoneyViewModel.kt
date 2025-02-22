@@ -25,9 +25,9 @@ class SplitMoneyViewModel : ViewModel() {
     private val _groups = mutableStateListOf<Group>()
     val groups: List<Group> get() = _groups
 
-//    fun addGroup(name: String, members: List<String>, totalExpenses: Double) {
-//        _groups.add(Group(name, members, totalExpenses))
-//    }
+    fun addGroup(name: String, members: List<String>,) {
+        _groups.add(Group(name, members))
+    }
 
     fun addExpenseToGroup(groupName: String, expense: Expense) {
         val group = _groups.find { it.name == groupName }

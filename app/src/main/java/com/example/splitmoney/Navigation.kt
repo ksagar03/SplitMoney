@@ -44,6 +44,24 @@ fun Navigation(viewModel: SplitMoneyViewModel) {
             }
         }
 
+        composable("addGroup") {
+            AddGroupScreen(viewModel = viewModel, onGroupAdded = { navController.popBackStack() })
+        }
+
+        composable("addExpense") {
+            SelectGroupScreen(
+                groups = viewModel.groups,
+                onGroupSelected = { groupName ->
+                    navController.navigate("addExpense/$groupName")
+
+                },
+                onCreateNewGroup = {
+                    navController.navigate("addGroup")
+
+                }
+            )
+        }
+
 
     }
 }

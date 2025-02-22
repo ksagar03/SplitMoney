@@ -144,15 +144,3 @@ fun GroupItem(group: Group, onClick: () -> Unit) {
 //
 //}
 
-
-@Composable
-fun GroupDetailsScreen(groupName: String) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = groupName ?: "Unknown Group",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
-
-        )
-    }
-}
