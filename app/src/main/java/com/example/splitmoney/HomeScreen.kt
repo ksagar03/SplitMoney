@@ -1,30 +1,43 @@
 package com.example.splitmoney
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 
 
 @Composable
@@ -39,47 +52,79 @@ fun HomeScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Button(
-                onClick = onAddGroupClick  // need to add navigation to add group screen
-                , modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Create New Group")
-
-            }
-
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
 
             if (groups.isEmpty()) {
                 Text(
                     "No Groups created yet",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray),
                     modifier = Modifier.padding((16.dp))
                 )
 
             } else {
-                LazyColumn(contentPadding = PaddingValues(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                println("Groups are not empty, displaying LazyColumn")
+                LazyColumn(
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     items(groups) { group ->
+                        println("Displaying group: ${group.name}")
                         GroupItem(group = group, onClick = { onGroupClick(group.name) })
                     }
                 }
             }
-            Spacer(modifier = Modifier.weight(1f))
-
 
             Button(
-                onClick = onAddExpenseClick,
-                modifier = Modifier
-                    .padding(16.dp)
-
+                onClick = onAddGroupClick,
+                modifier = Modifier.fillMaxWidth(),
             ) {
+                Text("Create New Group")
+
+            }
+
+        }
+
+
+//        Button(
+//            onClick = onAddExpenseClick,
+//            modifier = Modifier
+//                .padding(20.dp)
+//                .align(Alignment.BottomEnd)
+//
+//        ) {
+//            Text("Add Expense")
+//        }
+        FloatingActionButton(
+            onClick = onAddExpenseClick,
+            modifier = Modifier
+                .padding(30.dp)
+                .width(150.dp)
+                .align(Alignment.BottomEnd),
+            containerColor = MaterialTheme.colorScheme.secondary
+
+
+        ) {
+            Row(
+
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AddCircle,
+                    contentDescription = "Add Expense"
+                )
                 Text("Add Expense")
             }
+
         }
+
+
     }
 
 }
@@ -93,18 +138,36 @@ fun GroupItem(group: Group, onClick: () -> Unit) {
 //        }
 //    }
     val totalAmount = group.expenses.sumOf { exp -> exp.amount }
+    var isPressed by remember { mutableStateOf(false) }
+    val animatedElevation by animateDpAsState(
+        targetValue = if (isPressed) 12.dp else 6.dp,
+        animationSpec = tween(durationMillis = 200), label = ""
+    )
+    val animatedAlpha by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(durationMillis = 500), label = ""
+    )
+    val animatedIconScale by animateFloatAsState(
+        targetValue = if (isPressed) 1.2f else 1f,
+        animationSpec = tween(durationMillis = 150), label = ""
+    )
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .clickable {
+                isPressed = !isPressed
+                onClick()
+            },
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = animatedElevation)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = group.name,
                 style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 8.dp),
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = "Members : ${group.members.joinToString(", ")}",
@@ -112,11 +175,29 @@ fun GroupItem(group: Group, onClick: () -> Unit) {
                 color = Color.Gray,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
-            Text(
-                text = "Total Expenses : ₹${"%.2f".format(totalAmount)}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
+
+            AnimatedVisibility(visible = animatedAlpha == 1f) {
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "₹",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.scale(animatedIconScale)
+                    )
+                    Text(
+                        text = " : ${"%.2f".format(totalAmount)}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray
+                    )
+                }
+
+            }
+
 
         }
 

@@ -127,7 +127,7 @@ fun AddExpenseScreen(
 
         Button(onClick = {
             if (expenseDescription.isEmpty() || expenseAmount.isEmpty() || selectedPayer.isEmpty()) {
-                errorMessage = "Please fill all the fiels"
+                errorMessage = "Please fill all the fields"
             } else {
                 try {
                     val amount = expenseAmount.toDouble()
