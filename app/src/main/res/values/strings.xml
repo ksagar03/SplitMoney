@@ -2,4 +2,11 @@
     <string name="app_name">Split Money</string>
     <string name="SignupHeading">Hey there,</string>
     <string name="SignupHeading2">Create an Account</string>
+    <string name="userName">Name</string>
+    <string name="userEmail">Mail</string>
+    <string name="userPassword">Password</string>
+
+
+
+
 </resources>
