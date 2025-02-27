@@ -2,11 +2,13 @@ package com.example.splitmoney.signuporlogin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,6 +20,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.splitmoney.R
+import com.example.splitmoney.signuporlogin.components.ButtonComponent
+import com.example.splitmoney.signuporlogin.components.DividerComponent
 import com.example.splitmoney.signuporlogin.components.TextComponent
 import com.example.splitmoney.signuporlogin.components.UserPasswordTextFiled
 import com.example.splitmoney.signuporlogin.components.UserTextFields
@@ -59,15 +63,28 @@ fun SignUpScreen() {
                 iconData = painterResource(id = R.drawable.baseline_lock_icon),
                 iconDescription = "userNameIcon"
             )
+            Spacer(modifier = Modifier.height(80.dp))
+            ButtonComponent(value = "Sign Up")
+
+            DividerComponent()
+
+            Row {
+                Text( modifier = Modifier.padding(vertical = 10.dp), text = "Already have an account?", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Text("Login")
+//                 need to work on this
+            }
+
+
         }
+
 
 
     }
 }
 
 
-@Preview
-@Composable
-fun DefaultPreviewOfSignUpScreen() {
-    SignUpScreen()
-}
+//@Preview
+//@Composable
+//fun DefaultPreviewOfSignUpScreen() {
+//    SignUpScreen()
+//}

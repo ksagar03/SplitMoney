@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.splitmoney.signuporlogin.SignUpScreen
 import com.example.splitmoney.ui.theme.SplitMoneyTheme
 
 class MainActivity : ComponentActivity() {
@@ -25,13 +26,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent{
-            SplitMoneyTheme {
-                Surface (color = MaterialTheme.colorScheme.background ){
-                    SplitMoneyAppView(viewModel = viewModel)
-
-                }
-            }
-
+//            SplitMoneyTheme {
+//                Surface (color = MaterialTheme.colorScheme.background ){
+//                    SplitMoneyAppView(viewModel = viewModel)
+//
+//                }
+//            }
+            SignUpScreen()
         }
 
     }
