@@ -1,6 +1,7 @@
 package com.example.splitmoney.signuporlogin.components
 
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,18 +37,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.splitmoney.R
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -73,11 +73,15 @@ fun TextComponent(value: String, fontSize: TextUnit, fontWeight: FontWeight) {
 fun UserTextFields(labelText: String, iconData: Painter, iconDescription: String) {
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
-        if (labelText == "Name") {
-            focusRequester.requestFocus()
-        }
-    }
+//    LaunchedEffect(Unit) {
+////        delay(2000L)
+//        if (labelText == "Name") {
+//            focusRequester.requestFocus()
+//        }else if(labelText == "Mail"){
+//            focusRequester.requestFocus()
+//
+//        }
+//    }
     var textValue by remember { mutableStateOf("") }
 
     OutlinedTextField(
@@ -197,12 +201,17 @@ fun ButtonComponent(value: String) {
             contentAlignment = Alignment.Center
 
         ) {
-            Text(
-                value,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = colorResource(id = R.color.Dark_Theme_Text)
-            )
+            AnimatedContent(targetState = value, label = "") {
+                targetValue ->
+                Text(
+                    targetValue,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorResource(id = R.color.Dark_Theme_Text)
+                )
+
+            }
+
 
 
         }

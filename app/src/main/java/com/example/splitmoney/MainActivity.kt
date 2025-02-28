@@ -15,33 +15,32 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.splitmoney.signuporlogin.SignUpScreen
+import com.example.splitmoney.signuporlogin.AuthScreen
 import com.example.splitmoney.ui.theme.SplitMoneyTheme
 
 class MainActivity : ComponentActivity() {
-    private  val viewModel: SplitMoneyViewModel by viewModels()
+    private val viewModel: SplitMoneyViewModel by viewModels()
 
     @SuppressLint("MissingSuperCall")
-    override  fun onCreate(savedInstanceState: Bundle?){
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContent{
+        setContent {
 //            SplitMoneyTheme {
 //                Surface (color = MaterialTheme.colorScheme.background ){
 //                    SplitMoneyAppView(viewModel = viewModel)
 //
 //                }
 //            }
-            SignUpScreen()
+            AuthScreen()
         }
 
     }
 }
 
 
-
 @Composable
-fun SplitMoneyAppView(viewModel: SplitMoneyViewModel){
+fun SplitMoneyAppView(viewModel: SplitMoneyViewModel) {
     Navigation(viewModel = viewModel)
 
 }
