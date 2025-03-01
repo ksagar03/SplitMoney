@@ -207,7 +207,7 @@ fun ButtonComponent(value: String) {
                     targetValue,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colorResource(id = R.color.Dark_Theme_Text)
+                    color = colorResource(id = R.color.Dark_Theme_Icon),
                 )
 
             }

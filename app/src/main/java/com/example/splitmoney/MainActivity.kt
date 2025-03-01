@@ -24,7 +24,6 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("MissingSuperCall")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
 //            SplitMoneyTheme {
 //                Surface (color = MaterialTheme.colorScheme.background ){
