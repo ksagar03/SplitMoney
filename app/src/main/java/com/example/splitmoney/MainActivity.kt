@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.splitmoney.signuporlogin.AuthScreen
 import com.example.splitmoney.ui.theme.SplitMoneyTheme
+import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     private val viewModel: SplitMoneyViewModel by viewModels()
@@ -24,6 +25,7 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("MissingSuperCall")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
         setContent {
 //            SplitMoneyTheme {
 //                Surface (color = MaterialTheme.colorScheme.background ){
