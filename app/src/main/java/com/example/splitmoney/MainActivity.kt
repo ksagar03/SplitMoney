@@ -4,23 +4,14 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.splitmoney.signuporlogin.AuthScreen
-import com.example.splitmoney.ui.theme.SplitMoneyTheme
+import com.example.splitmoney.signuporlogin.AuthViewModel
 import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: SplitMoneyViewModel by viewModels()
+    private val splitMoneyViewModel: SplitMoneyViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     @SuppressLint("MissingSuperCall")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,18 +24,19 @@ class MainActivity : ComponentActivity() {
 //
 //                }
 //            }
-            AuthScreen()
+            Navigation(viewModel = splitMoneyViewModel, authViewModel = authViewModel)
+
         }
 
     }
 }
 
 
-@Composable
-fun SplitMoneyAppView(viewModel: SplitMoneyViewModel) {
-    Navigation(viewModel = viewModel)
-
-}
+//@Composable
+//fun SplitMoneyAppView(splitMoneyViewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
+//    Navigation(viewModel = splitMoneyViewModel, authViewModel = authViewModel)
+//
+//}
 
 
 

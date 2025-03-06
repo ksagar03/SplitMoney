@@ -70,7 +70,13 @@ fun TextComponent(value: String, fontSize: TextUnit, fontWeight: FontWeight) {
 }
 
 @Composable
-fun UserTextFields(labelText: String, iconData: Painter, iconDescription: String) {
+fun UserTextFields(
+    labelText: String,
+    iconData: Painter,
+    iconDescription: String,
+    onValueChange: (String) -> Unit,
+    textValue: String,
+) {
     val focusRequester = remember { FocusRequester() }
 
 //    LaunchedEffect(Unit) {
@@ -82,7 +88,7 @@ fun UserTextFields(labelText: String, iconData: Painter, iconDescription: String
 //
 //        }
 //    }
-    var textValue by remember { mutableStateOf("") }
+//    var textValue by remember { mutableStateOf("") }
 
     OutlinedTextField(
         modifier = Modifier
@@ -98,12 +104,13 @@ fun UserTextFields(labelText: String, iconData: Painter, iconDescription: String
             focusedContainerColor = colorResource(id = R.color.Dark_Theme_Primary),
             focusedTextColor = colorResource(id = R.color.Dark_Theme_Text),
             focusedLeadingIconColor = colorResource(id = R.color.Dark_Theme_Icon),
+            unfocusedTextColor = colorResource(id = R.color.Dark_Theme_Text)
 
-            ),
+        ),
         keyboardOptions = KeyboardOptions.Default,
         value = textValue,
         onValueChange = {
-            textValue = it
+            onValueChange(it)
         },
         leadingIcon = {
             Icon(painter = iconData, contentDescription = iconDescription)
@@ -115,9 +122,15 @@ fun UserTextFields(labelText: String, iconData: Painter, iconDescription: String
 }
 
 @Composable
-fun UserPasswordTextFiled(labelText: String, iconData: Painter, iconDescription: String) {
+fun UserPasswordTextFiled(
+    labelText: String,
+    iconData: Painter,
+    iconDescription: String,
+    onValueChange: (String) -> Unit,
+    passwordValue: String,
+) {
 
-    var passwordValue by remember { mutableStateOf("") }
+//    var passwordValue by remember { mutableStateOf("") }
 
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -140,7 +153,7 @@ fun UserPasswordTextFiled(labelText: String, iconData: Painter, iconDescription:
 
         value = passwordValue,
         onValueChange = {
-            passwordValue = it
+            onValueChange(it)
         },
         leadingIcon = {
             Icon(painter = iconData, contentDescription = iconDescription)
@@ -171,11 +184,11 @@ fun UserPasswordTextFiled(labelText: String, iconData: Painter, iconDescription:
 
 }
 
-
 @Composable
-fun ButtonComponent(value: String) {
+fun ButtonComponent(value: String, onButtonClicked: () -> Unit = {}) {
+
     Button(
-        onClick = {},
+        onClick = { onButtonClicked() },
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
@@ -201,8 +214,7 @@ fun ButtonComponent(value: String) {
             contentAlignment = Alignment.Center
 
         ) {
-            AnimatedContent(targetState = value, label = "") {
-                targetValue ->
+            AnimatedContent(targetState = value, label = "") { targetValue ->
                 Text(
                     targetValue,
                     fontSize = 18.sp,
@@ -213,15 +225,16 @@ fun ButtonComponent(value: String) {
             }
 
 
-
         }
     }
 }
 
 @Composable
 fun DividerComponent() {
-    Row(modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
 
         HorizontalDivider(
             modifier = Modifier
@@ -229,7 +242,12 @@ fun DividerComponent() {
                 .weight(1f),
             thickness = 1.dp, color = colorResource(id = R.color.teal_200),
         )
-        Text("or", fontSize = 18.sp, color = colorResource(id = R.color.Dark_Theme_Text), modifier = Modifier.padding(8.dp))
+        Text(
+            "or",
+            fontSize = 18.sp,
+            color = colorResource(id = R.color.Dark_Theme_Text),
+            modifier = Modifier.padding(8.dp)
+        )
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()

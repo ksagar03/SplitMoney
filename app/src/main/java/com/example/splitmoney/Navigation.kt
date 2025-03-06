@@ -1,15 +1,45 @@
 package com.example.splitmoney
 
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.splitmoney.signuporlogin.AuthScreen
+import com.example.splitmoney.signuporlogin.AuthStateInfo
+import com.example.splitmoney.signuporlogin.AuthViewModel
 
 
 @Composable
-fun Navigation(viewModel: SplitMoneyViewModel) {
+fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "home") {
+    val authStateInfo = authViewModel.authState.collectAsState()
+
+    NavHost(navController = navController, startDestination = "auth") {
+
+        composable("auth") {
+            when (authStateInfo.value) {
+                AuthStateInfo.Loading -> {
+                    CircularProgressIndicator()
+                }
+
+                AuthStateInfo.Authenticated -> {
+                    navController.navigate("home") {
+                        popUpTo("auth") { inclusive = true }
+                    }
+                }
+
+                AuthStateInfo.Unauthenticated -> {
+                    AuthScreen(viewModel = authViewModel, onSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    })
+                }
+            }
+        }
+
         composable("home") {
             HomeScreen(
                 viewModel = viewModel,

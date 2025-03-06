@@ -41,7 +41,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.splitmoney.R
@@ -53,7 +52,7 @@ import com.example.splitmoney.signuporlogin.components.UserTextFields
 
 
 class AuthState {
-    var isSignUpScreen by mutableStateOf(true)
+    var isSignUpScreen by mutableStateOf(false)
 
     fun toggleAuthMode() {
         isSignUpScreen = !isSignUpScreen
@@ -68,8 +67,12 @@ fun rememberAuthState(): AuthState {
 
 
 @Composable
-fun AuthScreen() {
+fun AuthScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
     val authState = rememberAuthState()
+    var userName by remember { mutableStateOf("") }
+    var emailValue by remember { mutableStateOf("") }
+    var passwordValue by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
 
     val infiniteTransition = rememberInfiniteTransition(label = "")
@@ -149,21 +152,32 @@ fun AuthScreen() {
                     UserTextFields(
                         labelText = stringResource(id = R.string.userName),
                         iconData = painterResource(id = R.drawable.account_icon),
-                        iconDescription = "userNameIcon"
+                        iconDescription = "userNameIcon",
+                        textValue = userName,
+                        onValueChange = { userName = it }
+
                     )
                 }
 
                 UserTextFields(
                     labelText = stringResource(id = R.string.userEmail),
                     iconData = painterResource(id = R.drawable.outline_email_icon),
-                    iconDescription = "userEmailIcon"
+                    iconDescription = "userEmailIcon",
+                    textValue = emailValue,
+                    onValueChange = { emailValue = it }
+
                 )
                 UserPasswordTextFiled(
                     labelText = stringResource(id = R.string.userPassword),
                     iconData = painterResource(id = R.drawable.baseline_lock_icon),
-                    iconDescription = "userNameIcon"
+                    iconDescription = "userNameIcon",
+                    passwordValue = passwordValue,
+                    onValueChange = { passwordValue = it }
                 )
-
+                Spacer(modifier = Modifier.height(20.dp))
+                errorMessage?.let {
+                    Text(text = it, color = colorResource(id = R.color.Dark_Theme_alert))
+                }
                 Spacer(modifier = Modifier.height(40.dp))
 
                 AnimatedContent(
@@ -171,12 +185,50 @@ fun AuthScreen() {
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     label = ""
                 ) { isSignUp ->
-                    ButtonComponent(value = if (isSignUp) "Sign Up" else "Login")
+                    ButtonComponent(
+                        value = if (isSignUp) "Sign Up" else "Login",
+                        onButtonClicked = {
+                            if (isSignUp) {
+                                if (userName.isEmpty() || emailValue.isEmpty() || passwordValue.isEmpty()) {
+                                    errorMessage = "Please fill all the fields"
+                                    return@ButtonComponent
+                                }
+                                viewModel.signUp(
+                                    userName,
+                                    emailValue,
+                                    passwordValue,
+                                    onResult = { success, message ->
+                                        if (success) {
+                                            onSuccess()
+                                        } else {
+                                            errorMessage = message ?: "Unknown error"
+                                        }
+                                    })
+                            } else {
+                                if (emailValue.isEmpty() || passwordValue.isEmpty()) {
+                                    errorMessage = "Please fill all the fields"
+                                    return@ButtonComponent
+                                }
+                                viewModel.login(
+                                    emailValue,
+                                    passwordValue,
+                                    onResult = { success, message ->
+                                        if (success) {
+                                            onSuccess()
+                                        } else {
+                                            errorMessage = message ?: "Unknown error"
+                                        }
+                                    })
+                            }
+                        })
                 }
 
                 DividerComponent()
 
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((-7).dp) ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy((-7).dp)
+                ) {
                     Text(
                         text = if (authState.isSignUpScreen) "Already have an account?" else "Don't have an account?",
                         fontSize = 14.sp,
