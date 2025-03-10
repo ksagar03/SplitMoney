@@ -44,7 +44,7 @@ fun SelectGroupScreen(
                     textAlign = TextAlign.Center
                 )
                 Button(
-                    onClick = {},
+                    onClick = {onCreateNewGroup()},
                 ) {
                     Text("Create New Group")
                 }

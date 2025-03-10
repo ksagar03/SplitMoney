@@ -1,7 +1,7 @@
 package com.example.splitmoney
 
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.splitmoney.signuporlogin.AuthScreen
 import com.example.splitmoney.signuporlogin.AuthStateInfo
 import com.example.splitmoney.signuporlogin.AuthViewModel
+import com.example.splitmoney.signuporlogin.components.Progressbar
 
 
 @Composable
@@ -16,26 +17,47 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     val authStateInfo = authViewModel.authState.collectAsState()
 
-    NavHost(navController = navController, startDestination = "auth") {
+    LaunchedEffect(authStateInfo.value) {
+        when (authStateInfo.value) {
+            AuthStateInfo.Authenticated -> {
+                navController.navigate("home") {
+                    popUpTo("auth") { inclusive = true }
 
+                }
+            }
+
+            AuthStateInfo.Unauthenticated -> {
+                navController.navigate("auth") {
+                    popUpTo("auth") { inclusive = true }
+
+                }
+            }
+
+            AuthStateInfo.Loading -> {
+//                We can't pass the composable function to the LaunchedEffect
+
+            }
+
+        }
+    }
+
+    NavHost(navController = navController, startDestination = "auth") {
         composable("auth") {
             when (authStateInfo.value) {
                 AuthStateInfo.Loading -> {
-                    CircularProgressIndicator()
+                    Progressbar()
                 }
 
                 AuthStateInfo.Authenticated -> {
-                    navController.navigate("home") {
-                        popUpTo("auth") { inclusive = true }
-                    }
+
                 }
 
                 AuthStateInfo.Unauthenticated -> {
-                    AuthScreen(viewModel = authViewModel, onSuccess = {
-                        navController.navigate("home") {
-                            popUpTo("auth") { inclusive = true }
+                    AuthScreen(
+                        viewModel = authViewModel,
+                        onSuccess = {
                         }
-                    })
+                    )
                 }
             }
         }
@@ -47,7 +69,16 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
                 onAddExpenseClick = {
                     navController.navigate(("addExpense"))
                 },
-                onAddGroupClick = { navController.navigate("addGroup") })
+                onAddGroupClick = { navController.navigate("addGroup") },
+                authViewModel = authViewModel,
+                onLogout = {
+                    navController.navigate("auth") {
+                        popUpTo("auth") {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
 
         composable("addExpense/{groupName}") { backStackEntry ->
@@ -91,7 +122,6 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
                 }
             )
         }
-
 
     }
 }

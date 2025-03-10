@@ -1,5 +1,6 @@
 package com.example.splitmoney
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -16,9 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.Button
@@ -27,6 +26,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,57 +38,69 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.splitmoney.header.Header
+import com.example.splitmoney.signuporlogin.AuthViewModel
 
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun HomeScreen(
     viewModel: SplitMoneyViewModel,
+    authViewModel: AuthViewModel,
     onGroupClick: (String) -> Unit,
     onAddGroupClick: () -> Unit,
-    onAddExpenseClick: () -> Unit
-) {
+    onAddExpenseClick: () -> Unit,
+    onLogout: () -> Unit,
+
+    ) {
     val groups = viewModel.groups
 
+    Scaffold(topBar = {
+        Header(
+            onLogoutClick = { authViewModel.logout() },
+        )
+    }) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 60.dp)) {
 
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
 
 
-            if (groups.isEmpty()) {
-                Text(
-                    "No Groups created yet",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray),
-                    modifier = Modifier.padding((16.dp))
-                )
+                if (groups.isEmpty()) {
+                    Text(
+                        "No Groups created yet",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray),
+                        modifier = Modifier.padding((16.dp))
+                    )
 
-            } else {
-                println("Groups are not empty, displaying LazyColumn")
-                LazyColumn(
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(groups) { group ->
-                        println("Displaying group: ${group.name}")
-                        GroupItem(group = group, onClick = { onGroupClick(group.name) })
+                } else {
+                    println("Groups are not empty, displaying LazyColumn")
+                    LazyColumn(
+                        contentPadding = PaddingValues(bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(groups) { group ->
+                            println("Displaying group: ${group.name}")
+                            GroupItem(group = group, onClick = { onGroupClick(group.name) })
+                        }
                     }
                 }
+
+                Button(
+                    onClick = onAddGroupClick,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Create New Group")
+
+                }
+
             }
-
-            Button(
-                onClick = onAddGroupClick,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Create New Group")
-
-            }
-
-        }
 
 
 //        Button(
@@ -100,31 +112,32 @@ fun HomeScreen(
 //        ) {
 //            Text("Add Expense")
 //        }
-        FloatingActionButton(
-            onClick = onAddExpenseClick,
-            modifier = Modifier
-                .padding(30.dp)
-                .width(150.dp)
-                .align(Alignment.BottomEnd),
-            containerColor = MaterialTheme.colorScheme.secondary
+            FloatingActionButton(
+                onClick = onAddExpenseClick,
+                modifier = Modifier
+                    .padding(30.dp)
+                    .width(150.dp)
+                    .align(Alignment.BottomEnd),
+                containerColor = MaterialTheme.colorScheme.secondary
 
 
-        ) {
-            Row(
-
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.AddCircle,
-                    contentDescription = "Add Expense"
-                )
-                Text("Add Expense")
+                Row(
+
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircle,
+                        contentDescription = "Add Expense"
+                    )
+                    Text("Add Expense")
+                }
+
             }
 
+
         }
-
-
     }
 
 }
@@ -151,6 +164,7 @@ fun GroupItem(group: Group, onClick: () -> Unit) {
         targetValue = if (isPressed) 1.2f else 1f,
         animationSpec = tween(durationMillis = 150), label = ""
     )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()

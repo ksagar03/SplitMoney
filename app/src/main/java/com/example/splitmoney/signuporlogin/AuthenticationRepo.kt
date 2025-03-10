@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 sealed class AuthStateInfo {
     object Loading : AuthStateInfo()
     object Authenticated : AuthStateInfo()
-     object Unauthenticated : AuthStateInfo()
+    object Unauthenticated : AuthStateInfo()
 }
 
 
@@ -42,7 +42,12 @@ class AuthViewModel : ViewModel() {
     }
 
 
-    fun signUp(name: String, email: String, password: String, onResult: (Boolean, String?) -> Unit) {
+    fun signUp(
+        name: String,
+        email: String,
+        password: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -55,7 +60,11 @@ class AuthViewModel : ViewModel() {
     }
 
 
-    private fun saveUserToFireStore(name: String, email: String, onResult: (Boolean, String?) -> Unit) {
+    private fun saveUserToFireStore(
+        name: String,
+        email: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
         if (userId != null) {
             val user = hashMapOf(

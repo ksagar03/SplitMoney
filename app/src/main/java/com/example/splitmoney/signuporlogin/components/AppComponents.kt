@@ -2,10 +2,13 @@ package com.example.splitmoney.signuporlogin.components
 
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -13,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.splitmoney.R
 import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 
 @Composable
@@ -260,19 +265,27 @@ fun DividerComponent() {
 }
 
 
-//@Composable
-//fun AnnotatedText(value: String){
-//    val annotatedString = buildAnnotatedString {
-//        append("Click")
-//        withLink(
-//            "login",
-//        ){
-//            append(value)
-//        }
-//        append("")
-//
-//
-//    }
+@Composable
+fun Progressbar(){
+    val color = remember { mutableStateOf(Color.Red) }
+    val animateColor = animateColorAsState(
+        targetValue = color.value,
+        animationSpec = tween(durationMillis = 1000), label = ""
+    )
 
+    LaunchedEffect(Unit) {
+        while (true){
+            color.value = Color(Random.nextInt(256), Random.nextInt(256), Random.nextInt(256))
+            delay(1000)
+        }
 
-//}
+    }
+    Box(contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()){
+        CircularProgressIndicator(modifier = Modifier.fillMaxSize(0.3f),
+            strokeWidth = 8.dp,
+            color = animateColor.value
+            )
+    }
+
+}
