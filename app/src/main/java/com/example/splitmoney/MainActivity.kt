@@ -5,8 +5,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.colorResource
 import com.example.splitmoney.header.Header
 import com.example.splitmoney.signuporlogin.AuthViewModel
 import com.google.firebase.FirebaseApp
@@ -26,9 +30,13 @@ class MainActivity : ComponentActivity() {
 //
 //                }
 //            }
-            Navigation(viewModel = splitMoneyViewModel, authViewModel = authViewModel)
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = colorResource(id = R.color.Dark_Theme)
+            ) {
+                Navigation(viewModel = splitMoneyViewModel, authViewModel = authViewModel)
 
-
+            }
         }
 
     }

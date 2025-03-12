@@ -75,7 +75,7 @@ fun HomeScreen(
                 if (groups.isEmpty()) {
                     Text(
                         "No Groups created yet",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray),
+                        style = MaterialTheme.typography.bodyLarge.copy(color = Color.Gray),
                         modifier = Modifier.padding((16.dp))
                     )
 
