@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
@@ -34,11 +33,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -102,10 +99,18 @@ fun HomeScreen(
 
 
                 } else {
+                    Text(
+                        "Groups:",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = colorResource(id = R.color.Dark_Theme_Text),
+                        modifier = Modifier.padding((16.dp))
+                    )
                     LazyColumn(
                         contentPadding = PaddingValues(bottom = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.animateContentSize().heightIn(max = 550.dp),
+                        modifier = Modifier
+                            .animateContentSize()
+                            .heightIn(max = 500.dp),
                         userScrollEnabled = true,
                     ) {
                         items(groups, key = { it.name }) { group ->
@@ -120,11 +125,14 @@ fun HomeScreen(
                                     )
                                 )
                             ) {
-                                GroupItem(group = group, onClick = { onGroupClick(group.name) })
+                                GroupItem(
+                                    group = group,
+                                    onClick = { onGroupClick(group.name) },
+                                    modifier = Modifier
+                                )
                             }
                         }
                     }
-
 
 
                 }
@@ -173,7 +181,7 @@ fun HomeScreen(
 
 
 @Composable
-fun GroupItem(group: Group, onClick: () -> Unit) {
+fun GroupItem(group: Group, onClick: () -> Unit, modifier: Modifier) {
     val totalAmount = group.expenses.sumOf { exp -> exp.amount }
     var isPressed by remember { mutableStateOf(false) }
     val animatedElevation by animateDpAsState(
@@ -190,12 +198,12 @@ fun GroupItem(group: Group, onClick: () -> Unit) {
     )
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable(interactionSource =  remember { MutableInteractionSource() },
+            .clickable(interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(bounded = true),
-                onClick =  {
+                onClick = {
                     isPressed = !isPressed
                     onClick()
                 }
