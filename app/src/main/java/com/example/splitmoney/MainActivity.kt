@@ -15,6 +15,7 @@ import androidx.compose.ui.res.colorResource
 import com.example.splitmoney.screens.Navigation
 import com.example.splitmoney.screens.SplitMoneyViewModel
 import com.example.splitmoney.signuporlogin.AuthViewModel
+import com.example.splitmoney.ui.theme.gradient
 import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
@@ -32,25 +33,12 @@ class MainActivity : ComponentActivity() {
 //
 //                }
 //            }
-            val gradient = Brush.verticalGradient(
-                colors = listOf(
-                    colorResource(id = R.color.Dark_Theme_Primary),
-                    colorResource(id = R.color.Dark_Theme_Secondary)
 
-                )
-            )
-            Surface(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
                 Box(modifier = Modifier
                     .fillMaxSize()
                     .background(gradient)) {
                     Navigation(viewModel = splitMoneyViewModel, authViewModel = authViewModel)
                 }
-
-
-            }
         }
 
     }

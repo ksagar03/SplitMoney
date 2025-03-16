@@ -26,10 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.splitmoney.R
+import com.example.splitmoney.ui.theme.gradient
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +85,7 @@ fun Header(
                 }
             },
             colors = TopAppBarDefaults.mediumTopAppBarColors(
-                containerColor = colorResource(id = R.color.Dark_Theme_Secondary)
+                containerColor = Color.Transparent
 
             ),
             modifier = Modifier.fillMaxWidth()
