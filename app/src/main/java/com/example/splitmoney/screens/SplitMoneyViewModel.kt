@@ -44,7 +44,43 @@ class SplitMoneyViewModel : ViewModel() {
     fun ViewExpensesOfGroup(groupName: String): List<Expense> {
         val group = _groups.find { it.name == groupName }
         return group?.expenses ?: emptyList()
+    }
 
+    fun editGroup(oldName: String, newName: String, newMembers: List<String>) {
+        val group = _groups.find { it.name == oldName }
+        group?.let {
+            val updatedGroup = it.copy(name = newName, members = newMembers)
+            _groups[_groups.indexOf(it)] = updatedGroup
+        }
+    }
+
+    fun deleteGroup(groupName: String) {
+        _groups.removeIf { it.name == groupName }
+
+    }
+
+    fun editExpense(groupName: String, oldExpense: Expense, newExpense: Expense) {
+        val group = _groups.find { it.name == groupName }
+        group?.let {
+            val updatedExpense = it.expenses.toMutableList()
+            val index = updatedExpense.indexOf(oldExpense)
+            if (index != -1) {
+                updatedExpense[index] = newExpense
+                val updatedGroup = it.copy(expenses = updatedExpense)
+                _groups[_groups.indexOf(it)] = updatedGroup
+            }
+        }
+
+    }
+
+    fun deleteExpense(groupName: String, expense: Expense) {
+        val group = _groups.find { it.name == groupName }
+        group?.let {
+            val updatedExpense = it.expenses.toMutableList()
+            updatedExpense.remove(expense)
+            val updatedGroup = it.copy(expenses = updatedExpense)
+            _groups[_groups.indexOf(it)] = updatedGroup
+        }
     }
 
 //    init {

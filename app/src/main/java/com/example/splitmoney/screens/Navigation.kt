@@ -77,7 +77,9 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
                             inclusive = true
                         }
                     }
-                }
+                },
+                onEditGroupClick = { groupName -> navController.navigate("editGroup/${groupName}") },
+                onDeleteGroupClick = { groupName -> viewModel.deleteGroup(groupName.toString()) }
             )
         }
 
@@ -121,6 +123,25 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
 
                 }
             )
+        }
+
+
+        composable("editGroup/{groupName}") { navBackStackEntry ->
+            val groupName = navBackStackEntry.arguments?.getString("groupName")
+            val group = viewModel.groups.find { it.name == groupName }
+            if (group != null) {
+                EditGroupScreen(
+                    group = group,
+                    onSave = { newName, newMembers ->
+                        if (groupName != null) {
+                            viewModel.editGroup(groupName, newName, newMembers)
+                        }
+                        navController.popBackStack()
+                    },
+                    onCancel = { navController.popBackStack() }
+
+                )
+            }
         }
 
     }

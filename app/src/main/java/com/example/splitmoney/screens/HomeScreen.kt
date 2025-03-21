@@ -6,8 +6,13 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,12 +31,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,9 +51,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.splitmoney.R
 import com.example.splitmoney.header.Header
@@ -61,6 +72,8 @@ fun HomeScreen(
     onAddGroupClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
     onLogout: () -> Unit,
+    onEditGroupClick: (Any?) -> Unit,
+    onDeleteGroupClick: (Any?) -> Unit,
 
     ) {
     val groups = viewModel.groups
@@ -75,7 +88,8 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 60.dp).background(gradient),
+                .padding(top = 60.dp)
+                .background(gradient),
         ) {
 
             Column(
@@ -131,7 +145,9 @@ fun HomeScreen(
                                 GroupItem(
                                     group = group,
                                     onClick = { onGroupClick(group.name) },
-                                    modifier = Modifier
+                                    modifier = Modifier,
+                                    onEditClick = { onEditGroupClick(group.name) },
+                                    onDeleteClick = { onDeleteGroupClick(group.name) }
                                 )
                             }
                         }
@@ -184,9 +200,16 @@ fun HomeScreen(
 
 
 @Composable
-fun GroupItem(group: Group, onClick: () -> Unit, modifier: Modifier) {
+fun GroupItem(
+    group: Group,
+    onClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier,
+) {
     val totalAmount = group.expenses.sumOf { exp -> exp.amount }
     var isPressed by remember { mutableStateOf(false) }
+    var isMenuPressed by remember { mutableStateOf(value = false) }
     val animatedElevation by animateDpAsState(
         targetValue = if (isPressed) 12.dp else 6.dp,
         animationSpec = tween(durationMillis = 200), label = ""
@@ -199,6 +222,11 @@ fun GroupItem(group: Group, onClick: () -> Unit, modifier: Modifier) {
         targetValue = if (isPressed) 1.2f else 1f,
         animationSpec = tween(durationMillis = 150), label = ""
     )
+    val rotationState by animateFloatAsState(
+        targetValue = if (isMenuPressed) 180f else 0f,
+        label = ""
+    )
+
 
     Card(
         modifier = modifier
@@ -216,20 +244,69 @@ fun GroupItem(group: Group, onClick: () -> Unit, modifier: Modifier) {
         colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.Dark_Theme_Icon))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = group.name,
-                style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.padding(bottom = 8.dp),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = group.name,
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                IconButton(onClick = { isMenuPressed = !isMenuPressed }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.more_menu),
+                        contentDescription = "menu display",
+                        tint = Color.Unspecified,
+                        modifier = Modifier.rotate(rotationState)
+                    )
+                }
+
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = isMenuPressed,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    Column(modifier = Modifier.width(100.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.clickable { onEditClick() }
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Edit group")
+                            Text("Edit")
+                        }
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            thickness = 1.dp,
+                            color = Color.Gray
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.clickable { onDeleteClick() }
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = "delete group")
+                            Text("delete")
+                        }
+                    }
+                }
+
+            }
+
             Text(
                 text = "Members : ${group.members.joinToString(", ")}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
-            AnimatedVisibility(visible = animatedAlpha == 1f) {
+            AnimatedVisibility(
+                visible = animatedAlpha == 1f,
+                enter = fadeIn() + slideInHorizontally(),
+                exit = fadeOut() + slideOutVertically()
+            ) {
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
