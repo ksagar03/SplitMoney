@@ -39,7 +39,7 @@ import com.example.splitmoney.R
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCancel: () -> Unit) {
+fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCancel: () -> Unit,) {
     var groupName by remember { mutableStateOf(group.name) }
     var members by remember { mutableStateOf(group.members.joinToString(", ")) }
 
@@ -51,6 +51,7 @@ fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCanc
         targetValue = if (buttonEnabled) 1f else 0.6f,
         animationSpec = tween(durationMillis = 300)
     )
+
     Column(
         modifier = Modifier
             .padding(16.dp)
@@ -136,5 +137,12 @@ fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCanc
         }
 
     }
+
+
+}
+
+
+@Composable
+fun EditExpenseScreen(){
 
 }

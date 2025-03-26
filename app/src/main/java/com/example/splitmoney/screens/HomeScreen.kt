@@ -147,7 +147,8 @@ fun HomeScreen(
                                     onClick = { onGroupClick(group.name) },
                                     modifier = Modifier,
                                     onEditClick = { onEditGroupClick(group.name) },
-                                    onDeleteClick = { onDeleteGroupClick(group.name) }
+                                    onDeleteClick = { onDeleteGroupClick(group.name) },
+                                    onViewOptions = true,
                                 )
                             }
                         }
@@ -206,6 +207,7 @@ fun GroupItem(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier,
+    onViewOptions: Boolean,
 ) {
     val totalAmount = group.expenses.sumOf { exp -> exp.amount }
     var isPressed by remember { mutableStateOf(false) }
@@ -254,13 +256,15 @@ fun GroupItem(
                     modifier = Modifier.padding(bottom = 8.dp),
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                IconButton(onClick = { isMenuPressed = !isMenuPressed }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.more_menu),
-                        contentDescription = "menu display",
-                        tint = Color.Unspecified,
-                        modifier = Modifier.rotate(rotationState)
-                    )
+                if (onViewOptions) {
+                    IconButton(onClick = { isMenuPressed = !isMenuPressed }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.more_menu),
+                            contentDescription = "menu display",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.rotate(rotationState)
+                        )
+                    }
                 }
 
                 androidx.compose.animation.AnimatedVisibility(

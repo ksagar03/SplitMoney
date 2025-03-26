@@ -138,7 +138,8 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
                         }
                         navController.popBackStack()
                     },
-                    onCancel = { navController.popBackStack() }
+                    onCancel = { navController.popBackStack() },
+
 
                 )
             }

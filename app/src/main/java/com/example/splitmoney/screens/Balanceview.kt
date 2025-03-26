@@ -13,6 +13,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,10 +46,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.splitmoney.R
+import com.example.splitmoney.screens.components.MyDropDownMenu
 import kotlinx.coroutines.delay
 import kotlin.math.round
 
@@ -221,7 +227,6 @@ fun ExpenseView(
 
         Spacer(Modifier.height(16.dp))
 
-        // Animated list of expenses
         AnimatedVisibility(
             visible = isClicked,
             enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
@@ -234,14 +239,39 @@ fun ExpenseView(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(groupExpenses) { (expense, amount, payer) ->
+                    var showMenu by remember { mutableStateOf(false) }
+                    var dropDownOffset by remember { mutableStateOf(Offset.Zero) }
+                    var isBeingPressed by remember { mutableStateOf(false) }
+                    val haptic = LocalHapticFeedback.current
+                    fun EditExpense() {}
+                    fun DeleteExpense() {}
                     Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                     Card(
-                        modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                        modifier = Modifier.pointerInput(Unit) {
+                            detectTapGestures(
+                                onPress = { offset ->
+                                    isBeingPressed = true
+                                    dropDownOffset = offset
+                                    tryAwaitRelease()
+                                    isBeingPressed = false
+                                },
+                                onLongPress = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    showMenu = true
+                                }
+
+                            )
+                        },
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                    ) {
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isBeingPressed) MaterialTheme.colorScheme.surfaceVariant.copy(
+                                alpha = 0.6f
+                            ) else MaterialTheme.colorScheme.surface
+                        ),
+
+                        ) {
                         Row(
                             modifier = Modifier
                                 .padding(8.dp)
@@ -269,6 +299,11 @@ fun ExpenseView(
                             )
                         }
                     }
+                    MyDropDownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        onMenuItemClick = { it -> if (it == "Edit") EditExpense() else DeleteExpense() },
+                        dropDownOffset = { dropDownOffset})
                 }
             }
         }
