@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,16 +38,22 @@ import androidx.compose.ui.unit.dp
 import com.example.splitmoney.R
 import com.example.splitmoney.screens.components.MyOutlinedTextField
 import com.example.splitmoney.screens.components.textFieldParameters
+import com.example.splitmoney.signuporlogin.components.DividerComponent
+import java.util.UUID
+
+
+data class Edit(val isTrue: Boolean, val data: Expense)
 
 @Composable
 fun AddExpenseScreen(
+    isEdit: Edit,
     viewModel: SplitMoneyViewModel,
     groupName: String,
     onExpenseAdded: () -> Unit,
 ) {
-    var expenseDescription by remember { mutableStateOf("") }
-    var expenseAmount by remember { mutableStateOf("") }
-    var selectedPayer by remember { mutableStateOf("") }
+    var expenseDescription by remember { mutableStateOf(if (isEdit.isTrue) isEdit.data.description else "") }
+    var expenseAmount by remember { mutableStateOf(if (isEdit.isTrue) isEdit.data.amount.toString() else "") }
+    var selectedPayer by remember { mutableStateOf(if (isEdit.isTrue) isEdit.data.payer else "") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var expanded by remember { mutableStateOf(false) }
 
@@ -79,7 +86,7 @@ fun AddExpenseScreen(
             Column(modifier = Modifier.padding(16.dp)) {
 
                 Text(
-                    text = "Add Expense for Group: $groupName",
+                    text = if (isEdit.isTrue) "Edit Expense for Group: $groupName" else "Add Expense for Group: $groupName",
                     modifier = Modifier.padding(bottom = 16.dp),
                     style = MaterialTheme.typography.headlineSmall,
                     color = colorResource(id = R.color.Dark_Theme_Text)
@@ -138,6 +145,7 @@ fun AddExpenseScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = colorResource(id = R.color.Dark_Theme_Text)
                                     )
+                                    DividerComponent()
                                 }
                             )
                         }
@@ -159,10 +167,15 @@ fun AddExpenseScreen(
                     onClick = {
                         if (expenseDescription.isEmpty() || expenseAmount.isEmpty() || selectedPayer.isEmpty()) {
                             errorMessage = "Please fill all the fields"
+                        } else if(isEdit.isTrue){
+                            val amount = expenseAmount.toDouble()
+                            val expense = Expense(isEdit.data.id,expenseDescription, amount, selectedPayer)
+                            viewModel.editExpense(groupName, isEdit.data.id, expense)
+                            onExpenseAdded()
                         } else {
                             try {
                                 val amount = expenseAmount.toDouble()
-                                val expense = Expense(expenseDescription, amount, selectedPayer)
+                                val expense = Expense(UUID.randomUUID().toString(),expenseDescription, amount, selectedPayer)
                                 viewModel.addExpenseToGroup(groupName, expense)
                                 onExpenseAdded()
                             } catch (e: NumberFormatException) {
@@ -174,7 +187,11 @@ fun AddExpenseScreen(
                     containerColor = colorResource(id = R.color.Dark_Theme_Secondary),
                     contentColor = colorResource(id = R.color.Dark_Theme_Text)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Expense")
+                    if (isEdit.isTrue) Text(
+                        "Save",
+                        color = colorResource(id = R.color.Dark_Theme_Text),
+                        style = MaterialTheme.typography.headlineSmall
+                    ) else Icon(Icons.Default.Add, contentDescription = "Add Expense")
                 }
 
             }

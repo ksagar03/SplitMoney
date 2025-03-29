@@ -2,8 +2,14 @@ package com.example.splitmoney.screens
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import java.util.UUID
 
-data class Expense(val description: String, val amount: Double, val payer: String)
+data class Expense(
+    val id: String = UUID.randomUUID().toString(),
+    var description: String,
+    var amount: Double,
+    var payer: String,
+)
 
 //data class Group(val name: String, val members: List<String>, val totalExpenses: Double = 0.0)
 
@@ -59,18 +65,22 @@ class SplitMoneyViewModel : ViewModel() {
 
     }
 
-    fun editExpense(groupName: String, oldExpense: Expense, newExpense: Expense) {
+    fun editExpense(groupName: String, expenseID: String, newExpense: Expense) {
         val group = _groups.find { it.name == groupName }
-        group?.let {
-            val updatedExpense = it.expenses.toMutableList()
-            val index = updatedExpense.indexOf(oldExpense)
-            if (index != -1) {
-                updatedExpense[index] = newExpense
-                val updatedGroup = it.copy(expenses = updatedExpense)
-                _groups[_groups.indexOf(it)] = updatedGroup
-            }
+//        group?.let {
+//            val updatedExpense = it.expenses.toMutableList()
+//            val index = updatedExpense.indexOf(oldExpense)
+//            if (index != -1) {
+//                updatedExpense[index] = newExpense
+//                val updatedGroup = it.copy(expenses = updatedExpense)
+//                _groups[_groups.indexOf(it)] = updatedGroup
+//            }
+//        }
+        group?.expenses?.find { it.id == expenseID }?.let { expense ->
+            expense.description = newExpense.description
+            expense.amount = newExpense.amount
+            expense.payer = newExpense.payer
         }
-
     }
 
     fun deleteExpense(groupName: String, expense: Expense) {
@@ -83,15 +93,29 @@ class SplitMoneyViewModel : ViewModel() {
         }
     }
 
-//    init {
-//        _groups.addAll(
-//            listOf(
-//                Group("Road Trip", listOf("Alice", "Bob"), totalExpenses = 9000.0),
-//                Group("Dinner", listOf("Charlie", "Dave"), totalExpenses = 300.0),
-//                Group("Movie", listOf("Eve", "Frank"), totalExpenses = 5000.0)
-//            )
-//        )
-//    }
+    init {
+        _groups.addAll(
+            listOf(
+                Group(
+                    "Road Trip",
+                    listOf("Alice", "Bob"),
+                    listOf(
+                        Expense(UUID.randomUUID().toString(), "Lunch", 5000.0, "Alice"),
+                        Expense(UUID.randomUUID().toString(), "Dinner", 7500.0, "Bob")
+                    )
+                ),
+                Group(
+                    "Dinner",
+                    listOf("Charlie", "Dave"),
+                    listOf(
+                        Expense(UUID.randomUUID().toString(), "Lunch", 5000.0, "Charlie"),
+                        Expense(UUID.randomUUID().toString(), "Dinner", 7500.0, "Dave")
+                    )
+                ),
+                Group("Movie", listOf("Eve", "Frank"))
+            )
+        )
+    }
 
 //    fun addExpense(description: String, amount: Double, payer: String) {
 //        _expenses.add(Expense(description, amount, payer))

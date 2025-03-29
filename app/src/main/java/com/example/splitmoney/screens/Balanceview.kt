@@ -1,5 +1,7 @@
 package com.example.splitmoney.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.EaseInOut
@@ -12,9 +14,11 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,14 +30,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,18 +54,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import androidx.xr.compose.testing.toDp
 import com.example.splitmoney.R
-import com.example.splitmoney.screens.components.MyDropDownMenu
 import kotlinx.coroutines.delay
 import kotlin.math.round
 
+
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun BalanceSummaryScreen(
     viewModel: SplitMoneyViewModel,
@@ -145,7 +158,7 @@ fun BalanceSummaryScreen(
                 }
 
             }
-            ExpenseView(groupName = groupName, viewModel = viewModel)
+            ExpenseView(groupName = groupName, viewModel = viewModel , navController = rememberNavController())
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -163,11 +176,13 @@ fun BalanceSummaryScreen(
 }
 
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExpenseView(
     viewModel: SplitMoneyViewModel,
     groupName: String,
+    navController: NavController
 ) {
     val groupExpenses = viewModel.ViewExpensesOfGroup(groupName)
     var isClicked by remember { mutableStateOf(false) }
@@ -238,74 +253,125 @@ fun ExpenseView(
                     .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(groupExpenses) { (expense, amount, payer) ->
-                    var showMenu by remember { mutableStateOf(false) }
-                    var dropDownOffset by remember { mutableStateOf(Offset.Zero) }
-                    var isBeingPressed by remember { mutableStateOf(false) }
+                items(groupExpenses) { (expense, amount, payer, id) ->
+                    var showActions by remember { mutableStateOf(false) }
+                    var cardHeight by remember { mutableStateOf(0.dp) }
                     val haptic = LocalHapticFeedback.current
-                    fun EditExpense() {}
-                    fun DeleteExpense() {}
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                    Card(
-                        modifier = Modifier.pointerInput(Unit) {
-                            detectTapGestures(
-                                onPress = { offset ->
-                                    isBeingPressed = true
-                                    dropDownOffset = offset
-                                    tryAwaitRelease()
-                                    isBeingPressed = false
-                                },
-                                onLongPress = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    showMenu = true
-                                }
-
-                            )
-                        },
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isBeingPressed) MaterialTheme.colorScheme.surfaceVariant.copy(
-                                alpha = 0.6f
-                            ) else MaterialTheme.colorScheme.surface
-                        ),
-
-                        ) {
-                        Row(
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .onSizeChanged { size -> cardHeight = size.height.toDp() }
+                    ) {
+                        Card(
                             modifier = Modifier
-                                .padding(8.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .fillMaxWidth()
+                                .pointerInput(Unit) {
+                                    detectTapGestures(onLongPress = {
+                                        haptic.performHapticFeedback(
+                                            HapticFeedbackType.LongPress
+                                        )
+                                        showActions = true
+                                    },
+                                        onPress = {})
+                                },
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (showActions) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface
+                            )
                         ) {
-                            Column {
+                            Row(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = expense,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = "Paid by: $payer",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                                 Text(
-                                    text = expense,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = "Paid by: $payer",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = "₹$amount",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
-                            Text(
-                                text = "₹$amount",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.primary
-                            )
+
+                        }
+
+                        if (showActions) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(cardHeight)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                                        shape = MaterialTheme.shapes.medium
+                                    )
+                                    .clickable { showActions = false }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                        .padding(8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            navController.navigate("editExpense/${groupName}/${id}")
+                                            showActions = false },
+
+
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .background(
+                                                color = MaterialTheme.colorScheme.primaryContainer,
+                                                shape = CircleShape
+                                            )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit",
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+
+                                    }
+
+                                    IconButton(
+                                        onClick = { showActions = false },
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .background(
+                                                color = MaterialTheme.colorScheme.errorContainer,
+                                                shape = CircleShape
+                                            )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete",
+                                            tint = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+
+                                    }
+
+
+                                }
+                            }
                         }
                     }
-                    MyDropDownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false },
-                        onMenuItemClick = { it -> if (it == "Edit") EditExpense() else DeleteExpense() },
-                        dropDownOffset = { dropDownOffset})
+
                 }
             }
         }
     }
 }
+

@@ -1,5 +1,7 @@
 package com.example.splitmoney.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -12,6 +14,7 @@ import com.example.splitmoney.signuporlogin.AuthViewModel
 import com.example.splitmoney.signuporlogin.components.Progressbar
 
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
     val navController = rememberNavController()
@@ -89,7 +92,9 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
             AddExpenseScreen(
                 viewModel = viewModel,
                 groupName = groupName ?: "",
-                onExpenseAdded = { navController.popBackStack() })
+                onExpenseAdded = { navController.popBackStack() },
+                isEdit = Edit(false, Expense("","", 0.0, ""))
+                )
 
 
         }
@@ -139,11 +144,20 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
                         navController.popBackStack()
                     },
                     onCancel = { navController.popBackStack() },
-
-
                 )
             }
         }
 
+        composable("editExpense/{groupName}/{expenseID}"){ navBackStackEntry ->
+            val groupName = navBackStackEntry.arguments?.getString("groupName")
+            val expenseID = navBackStackEntry.arguments?.getString("expenseID")
+
+            val expenseToEdit = viewModel.groups.find { it.name == groupName }?.expenses?.find { it.id == expenseID }
+            AddExpenseScreen(isEdit = Edit(true, expenseToEdit!!),
+                viewModel = viewModel,
+                groupName = groupName ?: "",
+                onExpenseAdded = { navController.popBackStack() }
+                )
+        }
     }
 }
