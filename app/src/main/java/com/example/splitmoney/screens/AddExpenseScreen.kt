@@ -3,6 +3,7 @@ package com.example.splitmoney.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,13 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import com.example.splitmoney.R
 import com.example.splitmoney.screens.components.MyOutlinedTextField
 import com.example.splitmoney.screens.components.textFieldParameters
-import com.example.splitmoney.signuporlogin.components.DividerComponent
 import java.util.UUID
 
 
@@ -131,9 +131,19 @@ fun AddExpenseScreen(
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(colorResource(id = R.color.Dark_Theme_Primary))
+                        modifier = Modifier
+                            .background(
+                                colorResource(id = R.color.Dark_Theme_Primary),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .border(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.Gray,
+                                width = 1.dp
+                            )
                     ) {
-                        members.forEach { member ->
+                        members.forEachIndexed { index, member ->
+
                             DropdownMenuItem(
                                 onClick = {
                                     selectedPayer = member
@@ -145,9 +155,11 @@ fun AddExpenseScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = colorResource(id = R.color.Dark_Theme_Text)
                                     )
-                                    DividerComponent()
                                 }
                             )
+                            if (index < members.size - 1) {
+                                HorizontalDivider(thickness = 2.dp)
+                            }
                         }
                     }
                 }
@@ -167,15 +179,21 @@ fun AddExpenseScreen(
                     onClick = {
                         if (expenseDescription.isEmpty() || expenseAmount.isEmpty() || selectedPayer.isEmpty()) {
                             errorMessage = "Please fill all the fields"
-                        } else if(isEdit.isTrue){
+                        } else if (isEdit.isTrue) {
                             val amount = expenseAmount.toDouble()
-                            val expense = Expense(isEdit.data.id,expenseDescription, amount, selectedPayer)
+                            val expense =
+                                Expense(isEdit.data.id, expenseDescription, amount, selectedPayer)
                             viewModel.editExpense(groupName, isEdit.data.id, expense)
                             onExpenseAdded()
                         } else {
                             try {
                                 val amount = expenseAmount.toDouble()
-                                val expense = Expense(UUID.randomUUID().toString(),expenseDescription, amount, selectedPayer)
+                                val expense = Expense(
+                                    UUID.randomUUID().toString(),
+                                    expenseDescription,
+                                    amount,
+                                    selectedPayer
+                                )
                                 viewModel.addExpenseToGroup(groupName, expense)
                                 onExpenseAdded()
                             } catch (e: NumberFormatException) {
@@ -190,7 +208,8 @@ fun AddExpenseScreen(
                     if (isEdit.isTrue) Text(
                         "Save",
                         color = colorResource(id = R.color.Dark_Theme_Text),
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp)
                     ) else Icon(Icons.Default.Add, contentDescription = "Add Expense")
                 }
 

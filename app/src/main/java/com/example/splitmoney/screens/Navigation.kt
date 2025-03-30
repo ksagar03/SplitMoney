@@ -107,7 +107,8 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
                     groupName = groupName,
                     onBlockClick = {
                         navController.popBackStack()
-                    }
+                    },
+                    navController = navController
                 )
             }
         }

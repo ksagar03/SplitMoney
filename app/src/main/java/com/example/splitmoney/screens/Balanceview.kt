@@ -13,7 +13,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -57,7 +56,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -76,6 +74,7 @@ fun BalanceSummaryScreen(
     viewModel: SplitMoneyViewModel,
     groupName: String,
     onBlockClick: () -> Unit,
+    navController: NavController,
 ) {
     val balances = viewModel.calculateBalances(groupName)
 
@@ -158,7 +157,7 @@ fun BalanceSummaryScreen(
                 }
 
             }
-            ExpenseView(groupName = groupName, viewModel = viewModel , navController = rememberNavController())
+            ExpenseView(groupName = groupName, viewModel = viewModel, navController = navController)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -177,12 +176,11 @@ fun BalanceSummaryScreen(
 
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExpenseView(
     viewModel: SplitMoneyViewModel,
     groupName: String,
-    navController: NavController
+    navController: NavController,
 ) {
     val groupExpenses = viewModel.ViewExpensesOfGroup(groupName)
     var isClicked by remember { mutableStateOf(false) }
@@ -253,7 +251,7 @@ fun ExpenseView(
                     .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(groupExpenses) { (expense, amount, payer, id) ->
+                items(groupExpenses) { (id, expense, amount, payer) ->
                     var showActions by remember { mutableStateOf(false) }
                     var cardHeight by remember { mutableStateOf(0.dp) }
                     val haptic = LocalHapticFeedback.current
@@ -328,7 +326,8 @@ fun ExpenseView(
                                     IconButton(
                                         onClick = {
                                             navController.navigate("editExpense/${groupName}/${id}")
-                                            showActions = false },
+                                            showActions = false
+                                        },
 
 
                                         modifier = Modifier
@@ -347,7 +346,13 @@ fun ExpenseView(
                                     }
 
                                     IconButton(
-                                        onClick = { showActions = false },
+                                        onClick = {
+                                            viewModel.deleteExpense(
+                                                groupName = groupName,
+                                                expense = Expense(id, expense, amount, payer)
+                                            )
+                                            showActions = false
+                                        },
                                         modifier = Modifier
                                             .size(48.dp)
                                             .background(
