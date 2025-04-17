@@ -15,6 +15,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,12 +34,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,12 +50,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.example.splitmoney.R
 import com.example.splitmoney.header.Header
 import com.example.splitmoney.signuporlogin.AuthViewModel
@@ -77,7 +78,6 @@ fun HomeScreen(
 
     ) {
     val groups = viewModel.groups
-//    val listState = rememberLazyListState()
 
 
     Scaffold(topBar = {
@@ -148,7 +148,6 @@ fun HomeScreen(
                                     modifier = Modifier,
                                     onEditClick = { onEditGroupClick(group.name) },
                                     onDeleteClick = { onDeleteGroupClick(group.name) },
-                                    onViewOptions = true,
                                 )
                             }
                         }
@@ -207,11 +206,11 @@ fun GroupItem(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier,
-    onViewOptions: Boolean,
 ) {
     val totalAmount = group.expenses.sumOf { exp -> exp.amount }
     var isPressed by remember { mutableStateOf(false) }
-    var isMenuPressed by remember { mutableStateOf(value = false) }
+    val haptic = LocalHapticFeedback.current
+    var showIcon by remember { mutableStateOf(false) }
     val animatedElevation by animateDpAsState(
         targetValue = if (isPressed) 12.dp else 6.dp,
         animationSpec = tween(durationMillis = 200), label = ""
@@ -224,110 +223,124 @@ fun GroupItem(
         targetValue = if (isPressed) 1.2f else 1f,
         animationSpec = tween(durationMillis = 150), label = ""
     )
-    val rotationState by animateFloatAsState(
-        targetValue = if (isMenuPressed) 180f else 0f,
-        label = ""
-    )
+//    val rotationState by animateFloatAsState(
+//        targetValue = if (isMenuPressed) 180f else 0f,
+//        label = ""
+//    )
 
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable(interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true),
-                onClick = {
-                    isPressed = !isPressed
-                    onClick()
-                }
-            ),
+            .pointerInput(Unit) {
+                detectTapGestures(onLongPress = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    showIcon = !showIcon
+
+                },
+                    onTap = {
+                        isPressed = !isPressed
+                        onClick()
+                    }
+                )
+            },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = animatedElevation),
         colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.Dark_Theme_Icon))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = group.name,
                     style = MaterialTheme.typography.headlineLarge,
                     modifier = Modifier.padding(bottom = 8.dp),
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                if (onViewOptions) {
-                    IconButton(onClick = { isMenuPressed = !isMenuPressed }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.more_menu),
-                            contentDescription = "menu display",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.rotate(rotationState)
-                        )
-                    }
-                }
 
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = isMenuPressed,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
+                Text(
+                    text = "Members : ${group.members.joinToString(", ")}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                AnimatedVisibility(
+                    visible = animatedAlpha == 1f,
+                    enter = fadeIn() + slideInHorizontally(),
+                    exit = fadeOut() + slideOutVertically()
                 ) {
-                    Column(modifier = Modifier.width(100.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            modifier = Modifier.clickable { onEditClick() }
-                        ) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit group")
-                            Text("Edit")
-                        }
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            thickness = 1.dp,
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "₹",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                color = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier.scale(animatedIconScale)
+                        )
+                        Text(
+                            text = " : ${"%.2f".format(totalAmount)}",
+                            style = MaterialTheme.typography.bodyLarge,
                             color = Color.Gray
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            modifier = Modifier.clickable { onDeleteClick() }
-                        ) {
-                            Icon(Icons.Default.Delete, contentDescription = "delete group")
-                            Text("delete")
-                        }
                     }
+
                 }
 
             }
-
-            Text(
-                text = "Members : ${group.members.joinToString(", ")}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-
-            AnimatedVisibility(
-                visible = animatedAlpha == 1f,
-                enter = fadeIn() + slideInHorizontally(),
-                exit = fadeOut() + slideOutVertically()
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showIcon,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+                modifier = Modifier.matchParentSize()
             ) {
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                Box(
+                    modifier = Modifier
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            showIcon = false
+                        }
+                        .zIndex(0.3f)
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "₹",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            color = MaterialTheme.colorScheme.primary
-                        ),
-                        modifier = Modifier.scale(animatedIconScale)
-                    )
-                    Text(
-                        text = " : ${"%.2f".format(totalAmount)}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.Gray
-                    )
+                    Row(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .background(
+                                color = colorResource(id = R.color.Dark_Theme),
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        IconButton(onClick = { onEditClick() }, content = {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = "Edit group",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        })
+                        IconButton(onClick = { onDeleteClick() }, content = {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "delete group",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+
+                        })
+
+
+                    }
+
                 }
 
             }

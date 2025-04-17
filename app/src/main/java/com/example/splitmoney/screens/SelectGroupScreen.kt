@@ -101,7 +101,6 @@ fun SelectGroupScreen(
                             modifier = Modifier.alpha(animatedAlpha.value),
                             onEditClick = {},
                             onDeleteClick = {},
-                            onViewOptions = false
                         )
                     }
                 }
