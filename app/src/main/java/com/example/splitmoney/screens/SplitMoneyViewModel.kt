@@ -47,7 +47,7 @@ class SplitMoneyViewModel : ViewModel() {
     }
 
 
-    fun ViewExpensesOfGroup(groupName: String): List<Expense> {
+    fun viewExpensesOfGroup(groupName: String): List<Expense> {
         val group = _groups.find { it.name == groupName }
         return group?.expenses ?: emptyList()
     }
@@ -98,7 +98,7 @@ class SplitMoneyViewModel : ViewModel() {
             listOf(
                 Group(
                     "Road Trip",
-                    listOf("Alice", "Bob"),
+                    listOf("alpha", "beta"),
                     listOf(
                         Expense(UUID.randomUUID().toString(), "Lunch", 5000.0, "Alice"),
                         Expense(UUID.randomUUID().toString(), "Dinner", 7500.0, "Bob")
@@ -106,7 +106,7 @@ class SplitMoneyViewModel : ViewModel() {
                 ),
                 Group(
                     "Dinner",
-                    listOf("Charlie", "Dave"),
+                    listOf("Charlie", "gamma"),
                     listOf(
                         Expense(UUID.randomUUID().toString(), "Lunch", 5000.0, "Charlie"),
                         Expense(UUID.randomUUID().toString(), "Dinner", 7500.0, "Dave")

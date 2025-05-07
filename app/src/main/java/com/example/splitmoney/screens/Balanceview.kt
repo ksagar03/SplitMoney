@@ -61,7 +61,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import androidx.xr.compose.testing.toDp
 import com.example.splitmoney.R
 import kotlinx.coroutines.delay
@@ -182,7 +181,7 @@ fun ExpenseView(
     groupName: String,
     navController: NavController,
 ) {
-    val groupExpenses = viewModel.ViewExpensesOfGroup(groupName)
+    val groupExpenses = viewModel.viewExpensesOfGroup(groupName)
     var isClicked by remember { mutableStateOf(false) }
     var isPulsing by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(

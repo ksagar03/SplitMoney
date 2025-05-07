@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    id("com.google.devtools.ksp")
 
 }
 
@@ -65,5 +66,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.com.google.gms.google.services.gradle.plugin)
     implementation(libs.google.services)
-
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 }
