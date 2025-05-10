@@ -23,7 +23,7 @@ data class Expense(
 @Dao
 interface ExpenseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExpense(expense: Expense)
+    suspend fun insertExpense(expense: com.example.splitmoney.screens.Expense)
 
     @Update
     suspend fun updateExpense(expense: Expense)
@@ -33,6 +33,9 @@ interface ExpenseDao {
 
     @Query("SELECT * FROM expenses WHERE groupId = :groupId")
     fun getExpensesForGroup(groupId: String): List<Expense>
+
+    @Query("DELETE FROM expenses WHERE groupId = :groupId")
+    suspend fun deleteExpensesForGroupID(groupId: String)
 }
 
 
