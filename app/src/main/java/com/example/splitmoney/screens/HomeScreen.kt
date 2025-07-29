@@ -1,6 +1,7 @@
 package com.example.splitmoney.screens
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -41,9 +42,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.example.splitmoney.R
 import com.example.splitmoney.header.Header
-import com.example.splitmoney.signuporlogin.AuthViewModel
+import com.example.splitmoney.models.Group
 import com.example.splitmoney.ui.theme.gradient
 
 
@@ -68,7 +69,6 @@ import com.example.splitmoney.ui.theme.gradient
 @Composable
 fun HomeScreen(
     viewModel: SplitMoneyViewModel,
-    authViewModel: AuthViewModel,
     onGroupClick: (String) -> Unit,
     onAddGroupClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
@@ -77,18 +77,21 @@ fun HomeScreen(
     onDeleteGroupClick: (Any?) -> Unit,
 
     ) {
-    val groups = viewModel.groups
+    val groups = viewModel.groups.collectAsState()
+    Header(
+        onLogoutClick = {
+            Log.d("Header", "Logout clicked")
+            onLogout() },
+    )
 
 
-    Scaffold(topBar = {
-        Header(
-            onLogoutClick = { authViewModel.logout() },
-        )
-    }, containerColor = colorResource(id = R.color.Dark_Theme)) {
+//    Scaffold(topBar = {
+//
+//    }, containerColor = colorResource(id = R.color.Dark_Theme) ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 60.dp)
+                .padding(top = 65.dp)
                 .background(gradient),
         ) {
 
@@ -101,7 +104,7 @@ fun HomeScreen(
             ) {
 
 
-                if (groups.isEmpty()) {
+                if (groups.value.isEmpty()) {
                     androidx.compose.animation.AnimatedVisibility(
                         visible = true,
                         enter = fadeIn(animationSpec = tween(durationMillis = 500))
@@ -130,7 +133,7 @@ fun HomeScreen(
                             .heightIn(max = 500.dp),
                         userScrollEnabled = true,
                     ) {
-                        items(groups, key = { it.name }) { group ->
+                        items(groups.value, key = { it.id }) { group ->
 
                             androidx.compose.animation.AnimatedVisibility(
                                 visible = true,
@@ -144,7 +147,7 @@ fun HomeScreen(
                             ) {
                                 GroupItem(
                                     group = group,
-                                    onClick = { onGroupClick(group.name) },
+                                    onClick = { onGroupClick(group.id) },
                                     modifier = Modifier,
                                     onEditClick = { onEditGroupClick(group.name) },
                                     onDeleteClick = { onDeleteGroupClick(group.name) },
@@ -195,8 +198,6 @@ fun HomeScreen(
 
         }
     }
-
-}
 
 
 @Composable

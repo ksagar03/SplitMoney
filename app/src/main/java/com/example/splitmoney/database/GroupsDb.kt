@@ -10,64 +10,29 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Relation
+import androidx.room.Transaction
 import androidx.room.TypeConverter
 import androidx.room.Update
-import com.example.splitmoney.screens.Expense
-import com.example.splitmoney.screens.Group
+import com.example.splitmoney.models.Expense
+import com.example.splitmoney.models.Group
+import com.example.splitmoney.models.GroupWithExpenses
 import kotlinx.coroutines.flow.Flow
-import java.util.UUID
 
 
-data class GroupWithExpenses(
-    @Embedded val group: GroupEntity,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "groupId"
-    )
-    val expenses: List<Expense>
-)
-
-
-@Entity(tableName = "groups")
-data class GroupEntity(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val name: String,
-    val members: List<String>,
-
-
-    ){
-    @Ignore
-    var expenses: List<Expense> = emptyList()
-
-    constructor(name: String, members: List<String>, expenses: List<Expense>) : this(UUID.randomUUID().toString(), name, members){
-        this.expenses = expenses
-    }
-}
-
-class Converters {
-    @TypeConverter
-    fun fromMembersList(members: List<String>): String {
-        return members.joinToString(",")
-    }
-
-    @TypeConverter
-    fun toMembersList(membersString: String): List<String> {
-        return if (membersString.isEmpty()) emptyList() else membersString.split(",")
-    }
-}
 
 
 @Dao
 interface GroupDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGroup(group: GroupEntity)
+    suspend fun insertGroup(group: Group)
 
     @Update
-    suspend fun updateGroup(group: GroupEntity)
+    suspend fun updateGroup(group: Group)
 
     @Delete
-    suspend fun deleteGroup(group: GroupEntity)
+    suspend fun deleteGroup(group: Group)
 
+    @Transaction
     @Query("SELECT * FROM groups")
     fun getGroupsWithExpenses(): Flow<List<GroupWithExpenses>>
 
@@ -78,8 +43,9 @@ interface GroupDao {
 //    suspend fun getGroupById(id: String): Group?
 
 
+    @Transaction
     @Query("SELECT * FROM groups WHERE id = :groupId")
-    fun getGroupWithExpenses(groupId: String): Flow<GroupWithExpenses>
+    suspend fun getGroupWithExpenses(groupId: String): GroupWithExpenses?
 
 
 }

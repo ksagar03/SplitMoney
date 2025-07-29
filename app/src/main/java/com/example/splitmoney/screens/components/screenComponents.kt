@@ -25,19 +25,23 @@ import androidx.compose.ui.unit.dp
 import com.example.splitmoney.R
 
 
-data class textFieldParameters(
+data class TextFieldParameters(
     val label: String,
     val value: String,
     val onValueChange: (String) -> Unit,
+    val supportingText: String?,
+    val isError: Boolean,
 
     )
 
 @Composable
-fun MyOutlinedTextField(textFieldParameters: textFieldParameters, modifier: Modifier) {
+fun MyOutlinedTextField(textFieldParameters: TextFieldParameters, modifier: Modifier) {
     OutlinedTextField(
         value = textFieldParameters.value,
         onValueChange = textFieldParameters.onValueChange,
-        label = { Text(textFieldParameters.label) },
+        label = { Text( textFieldParameters.label) },
+        isError = textFieldParameters.isError,
+        supportingText ={ textFieldParameters.supportingText?.let { Text(it) } },
         shape = RoundedCornerShape(12.dp),
         modifier = modifier,
         colors = OutlinedTextFieldDefaults.colors(

@@ -36,10 +36,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.example.splitmoney.R
+import com.example.splitmoney.models.Group
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCancel: () -> Unit,) {
+fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCancel: () -> Unit) {
     var groupName by remember { mutableStateOf(group.name) }
     var members by remember { mutableStateOf(group.members.joinToString(", ")) }
 
@@ -49,7 +50,8 @@ fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCanc
 
     val animatedProgress by animateFloatAsState(
         targetValue = if (buttonEnabled) 1f else 0.6f,
-        animationSpec = tween(durationMillis = 300)
+        animationSpec = tween(durationMillis = 300),
+        label = ""
     )
 
     Column(
@@ -70,7 +72,8 @@ fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCanc
                 label = { Text("Group Name") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp), singleLine = true,
+                    .padding(vertical = 8.dp),
+                singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = colorResource(id = R.color.Dark_Theme_Icon),
                     focusedLabelColor = colorResource(id = R.color.Dark_Theme_Icon),
@@ -78,7 +81,9 @@ fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCanc
                     focusedContainerColor = colorResource(id = R.color.Dark_Theme_Primary),
                     focusedTextColor = colorResource(id = R.color.Dark_Theme_Text),
                     focusedLeadingIconColor = colorResource(id = R.color.Dark_Theme_Icon),
-                    unfocusedTextColor = colorResource(id = R.color.Dark_Theme_Text)
+                    unfocusedTextColor = colorResource(id = R.color.Dark_Theme_Text),
+                    errorBorderColor = Color.Red,
+                    errorLabelColor = Color.Red
                 )
             )
         }
@@ -108,13 +113,14 @@ fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCanc
         }
         Spacer(modifier = Modifier.height(24.dp))
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(
-                onClick = onCancel, modifier = Modifier
+                onClick = onCancel,
+                modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp), colors = ButtonDefaults.buttonColors(
+                    .padding(end = 8.dp),
+                colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.Dark_Theme_alert)
                 )
             ) {
@@ -143,6 +149,6 @@ fun EditGroupScreen(group: Group, onSave: (String, List<String>) -> Unit, onCanc
 
 
 @Composable
-fun EditExpenseScreen(){
+fun EditExpenseScreen() {
 
 }

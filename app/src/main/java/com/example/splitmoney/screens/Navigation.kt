@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.splitmoney.models.Expense
 import com.example.splitmoney.signuporlogin.AuthScreen
 import com.example.splitmoney.signuporlogin.AuthStateInfo
 import com.example.splitmoney.signuporlogin.AuthViewModel
@@ -68,21 +69,21 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
         composable("home") {
             HomeScreen(
                 viewModel = viewModel,
-                onGroupClick = { groupName -> navController.navigate("balanceView/${groupName}") },
+                onGroupClick = { groupID -> navController.navigate("balanceView/${groupID}") },
                 onAddExpenseClick = {
                     navController.navigate(("addExpense"))
                 },
                 onAddGroupClick = { navController.navigate("addGroup") },
-                authViewModel = authViewModel,
                 onLogout = {
+                    authViewModel.logout()
                     navController.navigate("auth") {
                         popUpTo("auth") {
                             inclusive = true
                         }
                     }
                 },
-                onEditGroupClick = { groupName -> navController.navigate("editGroup/${groupName}") },
-                onDeleteGroupClick = { groupName -> viewModel.deleteGroup(groupName.toString()) }
+                onEditGroupClick = { groupID -> navController.navigate("editGroup/${groupID}") },
+                onDeleteGroupClick = { groupID -> viewModel.deleteGroup(groupID.toString()) }
             )
         }
 
@@ -91,20 +92,20 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
 
             AddExpenseScreen(
                 viewModel = viewModel,
-                groupName = groupName ?: "",
+                groupID = groupName ?: "",
                 onExpenseAdded = { navController.popBackStack() },
-                isEdit = Edit(false, Expense("","", 0.0, ""))
+                isEdit = Edit(false, Expense("","", 0.0, "", ""))
                 )
 
 
         }
 
-        composable("balanceView/{groupName}") { navBackStackEntry ->
-            val groupName = navBackStackEntry.arguments?.getString("groupName")
-            if (groupName != null) {
+        composable("balanceView/{groupID}") { navBackStackEntry ->
+            val groupID = navBackStackEntry.arguments?.getString("groupID")
+            if (groupID != null) {
                 BalanceSummaryScreen(
                     viewModel = viewModel,
-                    groupName = groupName,
+                    groupID = groupID,
                     onBlockClick = {
                         navController.popBackStack()
                     },
@@ -119,10 +120,9 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
 
         composable("addExpense") {
             SelectGroupScreen(
-                groups = viewModel.groups,
+                groups = viewModel.groups.collectAsState().value,
                 onGroupSelected = { groupName ->
                     navController.navigate("addExpense/$groupName")
-
                 },
                 onCreateNewGroup = {
                     navController.navigate("addGroup")
@@ -132,15 +132,15 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
         }
 
 
-        composable("editGroup/{groupName}") { navBackStackEntry ->
-            val groupName = navBackStackEntry.arguments?.getString("groupName")
-            val group = viewModel.groups.find { it.name == groupName }
+        composable("editGroup/{groupID}") { navBackStackEntry ->
+            val groupID = navBackStackEntry.arguments?.getString("groupID")
+            val group = viewModel.groups.collectAsState().value.find { it.id == groupID }
             if (group != null) {
                 EditGroupScreen(
                     group = group,
                     onSave = { newName, newMembers ->
-                        if (groupName != null) {
-                            viewModel.editGroup(groupName, newName, newMembers)
+                        if (groupID != null) {
+                            viewModel.editGroup(groupID, newName, newMembers)
                         }
                         navController.popBackStack()
                     },
@@ -149,16 +149,19 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
             }
         }
 
-        composable("editExpense/{groupName}/{expenseID}"){ navBackStackEntry ->
-            val groupName = navBackStackEntry.arguments?.getString("groupName")
+        composable("editExpense/{groupID}/{expenseID}"){ navBackStackEntry ->
+            val groupID = navBackStackEntry.arguments?.getString("groupName")
             val expenseID = navBackStackEntry.arguments?.getString("expenseID")
 
-            val expenseToEdit = viewModel.groups.find { it.name == groupName }?.expenses?.find { it.id == expenseID }
-            AddExpenseScreen(isEdit = Edit(true, expenseToEdit!!),
-                viewModel = viewModel,
-                groupName = groupName ?: "",
-                onExpenseAdded = { navController.popBackStack() }
+            val expenseToEdit = viewModel.groups.collectAsState().value.find { it.id == groupID }?.expenses?.find { it.id == expenseID }
+            if (groupID != null) {
+                AddExpenseScreen(isEdit = Edit(true, expenseToEdit!!),
+                    viewModel = viewModel,
+                    groupID = groupID,
+                    onExpenseAdded = { navController.popBackStack() }
                 )
+            }
         }
     }
 }
+

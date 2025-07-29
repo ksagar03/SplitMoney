@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 sealed class AuthStateInfo {
-    object Loading : AuthStateInfo()
-    object Authenticated : AuthStateInfo()
-    object Unauthenticated : AuthStateInfo()
+    data object Loading : AuthStateInfo()
+    data object Authenticated : AuthStateInfo()
+    data object Unauthenticated : AuthStateInfo()
 }
 
 
@@ -17,14 +17,28 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableStateFlow<AuthStateInfo>(AuthStateInfo.Loading)
     val authState: StateFlow<AuthStateInfo> get() = _authState
 
+    private  val firebaseAuth: FirebaseAuth by lazy{
+        FirebaseAuth.getInstance()
+    }
+    private val firestore: FirebaseFirestore by lazy {
+        FirebaseFirestore.getInstance()
+    }
 
-    init {
-        FirebaseAuth.getInstance().addAuthStateListener { auth ->
-            if (auth.currentUser != null) {
-                _authState.value = AuthStateInfo.Authenticated
-            } else {
-                _authState.value = AuthStateInfo.Unauthenticated
-            }
+    private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
+        if (auth.currentUser != null) {
+            _authState.value = AuthStateInfo.Authenticated
+        } else {
+            _authState.value = AuthStateInfo.Unauthenticated
+        }
+    }
+
+    fun startListeningToAuthState() {
+        firebaseAuth.addAuthStateListener(this.authStateListener)
+        // Check initial state
+        if (firebaseAuth.currentUser != null) {
+            _authState.value = AuthStateInfo.Authenticated
+        } else {
+            _authState.value = AuthStateInfo.Unauthenticated
         }
     }
 
@@ -87,6 +101,11 @@ class AuthViewModel : ViewModel() {
 
     fun logout() {
         FirebaseAuth.getInstance().signOut()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        firebaseAuth.removeAuthStateListener(authStateListener)
     }
 
 

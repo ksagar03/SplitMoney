@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.xr.compose.testing.toDp
 import com.example.splitmoney.R
+import com.example.splitmoney.models.Expense
 import kotlinx.coroutines.delay
 import kotlin.math.round
 
@@ -71,11 +72,11 @@ import kotlin.math.round
 @Composable
 fun BalanceSummaryScreen(
     viewModel: SplitMoneyViewModel,
-    groupName: String,
+    groupID: String,
     onBlockClick: () -> Unit,
     navController: NavController,
 ) {
-    val balances = viewModel.calculateBalances(groupName)
+    val balances = viewModel.calculateBalances(groupID)
 
     Column(
         modifier = Modifier
@@ -84,7 +85,7 @@ fun BalanceSummaryScreen(
     ) {
         Spacer(modifier = Modifier.height(50.dp))
         Text(
-            "Balance Summary for $groupName",
+            "Balance Summary for $groupID",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier
                 .padding(bottom = 16.dp)
@@ -156,7 +157,7 @@ fun BalanceSummaryScreen(
                 }
 
             }
-            ExpenseView(groupName = groupName, viewModel = viewModel, navController = navController)
+            ExpenseView(groupID = groupID, viewModel = viewModel, navController = navController)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -178,10 +179,10 @@ fun BalanceSummaryScreen(
 @Composable
 fun ExpenseView(
     viewModel: SplitMoneyViewModel,
-    groupName: String,
+    groupID: String,
     navController: NavController,
 ) {
-    val groupExpenses = viewModel.viewExpensesOfGroup(groupName)
+    val groupExpenses = viewModel.viewExpensesOfGroup(groupID)
     var isClicked by remember { mutableStateOf(false) }
     var isPulsing by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
@@ -221,7 +222,7 @@ fun ExpenseView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "View \"$groupName\" Expenses",
+                    text = "View \"$groupID\" Expenses",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -324,7 +325,7 @@ fun ExpenseView(
                                 ) {
                                     IconButton(
                                         onClick = {
-                                            navController.navigate("editExpense/${groupName}/${id}")
+                                            navController.navigate("editExpense/${groupID}/${id}")
                                             showActions = false
                                         },
 
@@ -347,8 +348,9 @@ fun ExpenseView(
                                     IconButton(
                                         onClick = {
                                             viewModel.deleteExpense(
-                                                groupName = groupName,
-                                                expense = Expense(id, expense, amount, payer)
+                                                expense = Expense(
+                                                    id, expense, amount, payer, groupID
+                                                )
                                             )
                                             showActions = false
                                         },
@@ -378,4 +380,3 @@ fun ExpenseView(
         }
     }
 }
-

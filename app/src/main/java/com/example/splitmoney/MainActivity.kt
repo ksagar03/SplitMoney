@@ -12,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.colorResource
+import androidx.core.view.WindowCompat
 import com.example.splitmoney.screens.Navigation
 import com.example.splitmoney.screens.SplitMoneyViewModel
 import com.example.splitmoney.signuporlogin.AuthViewModel
@@ -22,10 +23,11 @@ class MainActivity : ComponentActivity() {
     private val splitMoneyViewModel: SplitMoneyViewModel by viewModels()
     private val authViewModel: AuthViewModel by viewModels()
 
-    @SuppressLint("MissingSuperCall", "UnusedMaterial3ScaffoldPaddingParameter")
+    @SuppressLint("MissingSuperCall", "UnusedMaterial3ScaffoldPaddingParameter", "NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FirebaseApp.initializeApp(this)
+        authViewModel.startListeningToAuthState()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
 //            SplitMoneyTheme {
 //                Surface (color = MaterialTheme.colorScheme.background ){

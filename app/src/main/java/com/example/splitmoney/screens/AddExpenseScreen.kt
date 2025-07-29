@@ -1,6 +1,6 @@
 package com.example.splitmoney.screens
 
-import androidx.compose.animation.AnimatedVisibility
+
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,8 +24,11 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -37,8 +40,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.example.splitmoney.R
+import com.example.splitmoney.models.Expense
 import com.example.splitmoney.screens.components.MyOutlinedTextField
-import com.example.splitmoney.screens.components.textFieldParameters
+import com.example.splitmoney.screens.components.TextFieldParameters
 import java.util.UUID
 
 
@@ -48,20 +52,32 @@ data class Edit(val isTrue: Boolean, val data: Expense)
 fun AddExpenseScreen(
     isEdit: Edit,
     viewModel: SplitMoneyViewModel,
-    groupName: String,
+    groupID: String,
     onExpenseAdded: () -> Unit,
 ) {
     var expenseDescription by remember { mutableStateOf(if (isEdit.isTrue) isEdit.data.description else "") }
     var expenseAmount by remember { mutableStateOf(if (isEdit.isTrue) isEdit.data.amount.toString() else "") }
     var selectedPayer by remember { mutableStateOf(if (isEdit.isTrue) isEdit.data.payer else "") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     var expanded by remember { mutableStateOf(false) }
+
+    var descriptionError by remember { mutableStateOf<String?>(null) }
+    var amountError by remember { mutableStateOf<String?>(null) }
+    var payerError by remember { mutableStateOf<String?>(null) }
+
+    val errorEvent by viewModel.errorEvents.collectAsState(initial = "")
+
+    val group = viewModel.groups.collectAsState().value.find { it.id == groupID }
+    val members = group?.members ?: emptyList()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(errorEvent) {
+        snackbarHostState.showSnackbar(errorEvent)
+    }
 
     val gradient = Brush.verticalGradient(
         colors = listOf(
             colorResource(id = R.color.Dark_Theme_Primary),
             colorResource(id = R.color.Dark_Theme_Secondary)
-
         )
     )
     Box(
@@ -86,36 +102,41 @@ fun AddExpenseScreen(
             Column(modifier = Modifier.padding(16.dp)) {
 
                 Text(
-                    text = if (isEdit.isTrue) "Edit Expense for Group: $groupName" else "Add Expense for Group: $groupName",
+                    text = if (isEdit.isTrue) "Edit Expense for Group: ${group?.name}" else "Add Expense for Group: ${group?.name}",
                     modifier = Modifier.padding(bottom = 16.dp),
                     style = MaterialTheme.typography.headlineSmall,
                     color = colorResource(id = R.color.Dark_Theme_Text)
                 )
-
+                Spacer(modifier = Modifier.height(16.dp))
+//                Expense field
                 MyOutlinedTextField(
-                    textFieldParameters = textFieldParameters(
+                    textFieldParameters = TextFieldParameters(
                         value = expenseDescription,
-                        onValueChange = { expenseDescription = it },
-                        label = "Expenses Description"
+                        onValueChange = {
+                            expenseDescription = it
+                            descriptionError = null
+                        },
+                        label = "Expenses Description",
+                        isError = descriptionError != null,
+                        supportingText = descriptionError
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 )
-
+// Amount field
                 MyOutlinedTextField(
-                    textFieldParameters = textFieldParameters(
-                        value = expenseAmount,
-                        onValueChange = { expenseAmount = it },
-                        label = "Expenses Amount"
+                    textFieldParameters = TextFieldParameters(
+                        label = "Expenses Amount", value = expenseAmount, onValueChange = {
+                            expenseAmount = it
+                            amountError = null
+                        }, supportingText = descriptionError, isError = descriptionError != null
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                val group = viewModel.groups.find { it.name == groupName }
-                val members = group?.members ?: emptyList()
+
 
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = selectedPayer.ifEmpty { "Select Payer" },
+                    Text(text = selectedPayer.ifEmpty { "Select Payer" },
                         modifier = Modifier
                             .clickable { expanded = true }
                             .padding(16.dp)
@@ -125,9 +146,17 @@ fun AddExpenseScreen(
                             )
                             .padding(8.dp),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = colorResource(id = R.color.Dark_Theme_Text)
+                        color = if (payerError != null) Color.Red else colorResource(id = R.color.Dark_Theme_Text)
 
                     )
+                    if (payerError != null) {
+                        Text(
+                            text = payerError!!,
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
@@ -137,82 +166,104 @@ fun AddExpenseScreen(
                                 shape = RoundedCornerShape(10.dp)
                             )
                             .border(
-                                shape = RoundedCornerShape(10.dp),
-                                color = Color.Gray,
-                                width = 1.dp
+                                shape = RoundedCornerShape(10.dp), color = Color.Gray, width = 1.dp
                             )
                     ) {
                         members.forEachIndexed { index, member ->
 
-                            DropdownMenuItem(
-                                onClick = {
-                                    selectedPayer = member
-                                    expanded = false
-                                },
-                                text = {
-                                    Text(
-                                        text = member,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = colorResource(id = R.color.Dark_Theme_Text)
-                                    )
-                                }
-                            )
+                            DropdownMenuItem(onClick = {
+                                selectedPayer = member
+                                payerError = null
+                                expanded = false
+                            }, text = {
+                                Text(
+                                    text = member,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colorResource(id = R.color.Dark_Theme_Text)
+                                )
+                            })
                             if (index < members.size - 1) {
                                 HorizontalDivider(thickness = 2.dp)
                             }
                         }
                     }
                 }
-                AnimatedVisibility(visible = errorMessage != null) {
-                    errorMessage?.let {
-                        Text(
-                            text = it,
-                            color = Color.Red,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-
-                }
+//                AnimatedVisibility(visible = errorMessage != null) {
+//                    errorMessage?.let {
+//                        Text(
+//                            text = it,
+//                            color = Color.Red,
+//                            modifier = Modifier.padding(bottom = 8.dp)
+//                        )
+//                    }
+//
+//                }
                 Spacer(modifier = Modifier.height(16.dp))
+
+//
 
                 FloatingActionButton(
                     onClick = {
-                        if (expenseDescription.isEmpty() || expenseAmount.isEmpty() || selectedPayer.isEmpty()) {
-                            errorMessage = "Please fill all the fields"
-                        } else if (isEdit.isTrue) {
-                            val amount = expenseAmount.toDouble()
-                            val expense =
-                                Expense(isEdit.data.id, expenseDescription, amount, selectedPayer)
-                            viewModel.editExpense(groupName, isEdit.data.id, expense)
-                            onExpenseAdded()
+                        var isValid = true
+
+                        if (expenseDescription.isEmpty()) {
+                            descriptionError = "Please enter a description"
+                            isValid = false
+                        }
+                        if (expenseAmount.isEmpty()) {
+                            amountError = "Please enter an amount"
+                            isValid = false
                         } else {
                             try {
-                                val amount = expenseAmount.toDouble()
-                                val expense = Expense(
-                                    UUID.randomUUID().toString(),
-                                    expenseDescription,
-                                    amount,
-                                    selectedPayer
-                                )
-                                viewModel.addExpenseToGroup(groupName, expense)
-                                onExpenseAdded()
+                                expenseAmount.toDouble()
                             } catch (e: NumberFormatException) {
-                                errorMessage = "invalid amount. Please enter a valid number."
+                                amountError = "Please enter a valid amount"
+                                isValid = false
                             }
+                        }
+                        if (selectedPayer.isEmpty()) {
+                            payerError = "Please select a payer"
+                            isValid = false
+                        }
+
+                        if (isValid) {
+                            val amount = expenseAmount.toDouble()
+                            if (isEdit.isTrue) {
+                                viewModel.editExpense(
+                                    isEdit.data.id, Expense(
+                                        isEdit.data.id,
+                                        expenseDescription,
+                                        amount,
+                                        selectedPayer,
+                                        group?.id ?: ""
+                                    )
+
+                                )
+                            } else {
+                                viewModel.addExpenseToGroup(
+                                    group?.id ?: "", Expense(
+                                        UUID.randomUUID().toString(),
+                                        expenseDescription,
+                                        amount,
+                                        selectedPayer,
+                                        group?.id ?: ""
+                                    )
+                                )
+                            }
+                            onExpenseAdded()
                         }
                     },
                     modifier = Modifier.align(Alignment.End),
                     containerColor = colorResource(id = R.color.Dark_Theme_Secondary),
                     contentColor = colorResource(id = R.color.Dark_Theme_Text)
                 ) {
-                    if (isEdit.isTrue) Text(
-                        "Save",
-                        color = colorResource(id = R.color.Dark_Theme_Text),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    ) else Icon(Icons.Default.Add, contentDescription = "Add Expense")
+                    if (isEdit.isTrue) {
+                        Text("Save")
+                    } else {
+                        Icon(Icons.Default.Add, contentDescription = "Add Expense")
+                    }
                 }
-
+//
             }
 
         }
