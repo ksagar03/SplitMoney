@@ -252,6 +252,7 @@ fun Header(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .zIndex(0.5f)
                 .clickable(interactionSource = interactionSource, indication = null) {
                     expanded = false
                     focusManager.clearFocus()

@@ -1,57 +1,58 @@
 package com.example.splitmoney
-
-import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.res.colorResource
 import androidx.core.view.WindowCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.splitmoney.screens.Navigation
 import com.example.splitmoney.screens.SplitMoneyViewModel
 import com.example.splitmoney.signuporlogin.AuthViewModel
 import com.example.splitmoney.ui.theme.gradient
-import com.google.firebase.FirebaseApp
+import dagger.hilt.android.AndroidEntryPoint
 
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val splitMoneyViewModel: SplitMoneyViewModel by viewModels()
-    private val authViewModel: AuthViewModel by viewModels()
 
-    @SuppressLint("MissingSuperCall", "UnusedMaterial3ScaffoldPaddingParameter", "NewApi")
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        authViewModel.startListeningToAuthState()
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContent {
-//            SplitMoneyTheme {
-//                Surface (color = MaterialTheme.colorScheme.background ){
-//                    SplitMoneyAppView(viewModel = viewModel)
-//
-//                }
-//            }
 
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .background(gradient)) {
-                    Navigation(viewModel = splitMoneyViewModel, authViewModel = authViewModel)
-                }
+        setContent {
+
+                AppContent()
         }
 
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+@Composable
+private fun AppContent(){
+    val splitMoneyViewModel: SplitMoneyViewModel = hiltViewModel()
+    val authViewModel: AuthViewModel = hiltViewModel()
 
-//@Composable
-//fun SplitMoneyAppView(splitMoneyViewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
-//    Navigation(viewModel = splitMoneyViewModel, authViewModel = authViewModel)
-//
-//}
+    LaunchedEffect(Unit) {
+        authViewModel.startListeningToAuthState()
+    }
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(gradient)) {
+        Navigation(viewModel = splitMoneyViewModel , authViewModel = authViewModel)
+    }
+
+}
 
 
 

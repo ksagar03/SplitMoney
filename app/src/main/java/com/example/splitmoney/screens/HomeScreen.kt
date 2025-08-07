@@ -133,6 +133,7 @@ fun HomeScreen(
                             .heightIn(max = 500.dp),
                         userScrollEnabled = true,
                     ) {
+
                         items(groups.value, key = { it.id }) { group ->
 
                             androidx.compose.animation.AnimatedVisibility(

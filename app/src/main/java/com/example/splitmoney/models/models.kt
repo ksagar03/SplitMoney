@@ -1,11 +1,13 @@
 package com.example.splitmoney.models
 
+
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import java.util.UUID
+import kotlin.collections.emptyList
 
 @Entity(tableName = "expenses")
 data class Expense(
@@ -13,7 +15,7 @@ data class Expense(
     var description: String,
     var amount: Double,
     var payer: String,
-    var groupId: String
+    var groupId: String?
 )
 
 @Entity(tableName = "groups")

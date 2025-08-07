@@ -7,8 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.splitmoney.models.Expense
-
-
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -24,7 +23,7 @@ interface ExpenseDao {
 
 
     @Query("SELECT * FROM expenses WHERE groupId = :groupId")
-    fun getExpensesForGroup(groupId: String): List<Expense>
+    fun getExpensesForGroup(groupId: String): Flow<List<Expense>>
 
 
     @Query("DELETE FROM expenses WHERE groupId = :groupId")

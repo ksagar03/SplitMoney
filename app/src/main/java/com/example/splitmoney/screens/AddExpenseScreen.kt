@@ -66,7 +66,7 @@ fun AddExpenseScreen(
 
     val errorEvent by viewModel.errorEvents.collectAsState(initial = "")
 
-    val group = viewModel.groups.collectAsState().value.find { it.id == groupID }
+    val group = viewModel.getGroupInfo(groupID)
     val members = group?.members ?: emptyList()
     val snackbarHostState = remember { SnackbarHostState() }
 

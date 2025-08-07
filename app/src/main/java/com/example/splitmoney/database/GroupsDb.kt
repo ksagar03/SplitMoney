@@ -33,9 +33,8 @@ interface GroupDao {
     suspend fun deleteGroup(group: Group)
 
     @Transaction
-    @Query("SELECT * FROM groups")
+    @Query("SELECT * FROM `groups`")
     fun getGroupsWithExpenses(): Flow<List<GroupWithExpenses>>
-
 //    @Query("SELECT * FROM groups WHERE name = :name")
 //    fun getGroupByName(name: String): Group?
 //
@@ -44,8 +43,6 @@ interface GroupDao {
 
 
     @Transaction
-    @Query("SELECT * FROM groups WHERE id = :groupId")
+    @Query("SELECT * FROM `groups` WHERE id = :groupId")
     suspend fun getGroupWithExpenses(groupId: String): GroupWithExpenses?
-
-
 }

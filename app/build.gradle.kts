@@ -78,6 +78,15 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.gson)
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.android.compiler)
+    implementation(libs.hilt.android.v2562)
+    ksp(libs.hilt.android.compiler.v2562)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation (libs.kotlin.stdlib)
+    implementation (libs.kotlin.reflect)
+
+
+}
+
+hilt{
+    enableAggregatingTask = true
 }

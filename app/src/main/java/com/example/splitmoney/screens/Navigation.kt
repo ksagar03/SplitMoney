@@ -87,12 +87,12 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
             )
         }
 
-        composable("addExpense/{groupName}") { backStackEntry ->
-            val groupName = backStackEntry.arguments?.getString("groupName")
+        composable("addExpense/{groupID}") { backStackEntry ->
+            val groupID = backStackEntry.arguments?.getString("groupID")
 
             AddExpenseScreen(
                 viewModel = viewModel,
-                groupID = groupName ?: "",
+                groupID = groupID ?: "",
                 onExpenseAdded = { navController.popBackStack() },
                 isEdit = Edit(false, Expense("","", 0.0, "", ""))
                 )
@@ -121,8 +121,8 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
         composable("addExpense") {
             SelectGroupScreen(
                 groups = viewModel.groups.collectAsState().value,
-                onGroupSelected = { groupName ->
-                    navController.navigate("addExpense/$groupName")
+                onGroupSelected = { groupID ->
+                    navController.navigate("addExpense/$groupID")
                 },
                 onCreateNewGroup = {
                     navController.navigate("addGroup")

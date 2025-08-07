@@ -1,5 +1,6 @@
 package com.example.splitmoney.screens
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
@@ -45,6 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,6 +66,7 @@ import androidx.navigation.NavController
 import androidx.xr.compose.testing.toDp
 import com.example.splitmoney.R
 import com.example.splitmoney.models.Expense
+import com.example.splitmoney.models.Group
 import kotlinx.coroutines.delay
 import kotlin.math.round
 
@@ -76,7 +79,15 @@ fun BalanceSummaryScreen(
     onBlockClick: () -> Unit,
     navController: NavController,
 ) {
+
+    LaunchedEffect(groupID) {
+        viewModel.setCurrentGroup(groupID)
+    }
+
+    val groupDetails = viewModel.getGroupInfo(groupID)
+    val expenses by viewModel.currentGroupExpenses.collectAsState()
     val balances = viewModel.calculateBalances(groupID)
+
 
     Column(
         modifier = Modifier
@@ -85,7 +96,7 @@ fun BalanceSummaryScreen(
     ) {
         Spacer(modifier = Modifier.height(50.dp))
         Text(
-            "Balance Summary for $groupID",
+            "Balance Summary for ${groupDetails?.name}",
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier
                 .padding(bottom = 16.dp)
@@ -157,7 +168,7 @@ fun BalanceSummaryScreen(
                 }
 
             }
-            ExpenseView(groupID = groupID, viewModel = viewModel, navController = navController)
+            ExpenseView(groupDetails=groupDetails, expenses = expenses, navController = navController, viewModel = viewModel)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -175,14 +186,17 @@ fun BalanceSummaryScreen(
 }
 
 
+@SuppressLint("RestrictedApi")
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun ExpenseView(
     viewModel: SplitMoneyViewModel,
-    groupID: String,
+    groupDetails: Group?,
+    expenses : List<Expense>,
     navController: NavController,
 ) {
-    val groupExpenses = viewModel.viewExpensesOfGroup(groupID)
+
+
     var isClicked by remember { mutableStateOf(false) }
     var isPulsing by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
@@ -222,7 +236,7 @@ fun ExpenseView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "View \"$groupID\" Expenses",
+                    text = "View \"${groupDetails?.name}\" Expenses",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -251,7 +265,7 @@ fun ExpenseView(
                     .animateContentSize(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(groupExpenses) { (id, expense, amount, payer) ->
+                items(expenses) { (id, expense, amount, payer) ->
                     var showActions by remember { mutableStateOf(false) }
                     var cardHeight by remember { mutableStateOf(0.dp) }
                     val haptic = LocalHapticFeedback.current
@@ -325,7 +339,7 @@ fun ExpenseView(
                                 ) {
                                     IconButton(
                                         onClick = {
-                                            navController.navigate("editExpense/${groupID}/${id}")
+                                            navController.navigate("editExpense/${groupDetails?.id}/${id}")
                                             showActions = false
                                         },
 
@@ -349,7 +363,7 @@ fun ExpenseView(
                                         onClick = {
                                             viewModel.deleteExpense(
                                                 expense = Expense(
-                                                    id, expense, amount, payer, groupID
+                                                    id, expense, amount, payer, groupDetails?.id
                                                 )
                                             )
                                             showActions = false
