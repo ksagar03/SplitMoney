@@ -9,7 +9,7 @@
     <color name="white">#FFFFFFFF</color>
 
 
-<!--    Dark theme Color scheme-->
+    Dark theme Color scheme
     <color name="Dark_Theme">#FF1A120B</color>
     <color name="Dark_Theme_Primary">#FF3C2A21</color>
     <color name="Dark_Theme_Secondary">#FF3F0071</color>
@@ -17,7 +17,9 @@
     <color name="Dark_Theme_Secondary2">#FF332FD0</color>
     <color name="Dark_Theme_Icon">#FFD5CEA3</color>
     <color name="Dark_Theme_Text">#FFE5E5CB</color>
-
+    <color name ="Label_Color_Dark">#EFBF04 </color>
+    <color name ="Unfocused_Border_Color_Dark">#4D4638  </color>
+    <color name="Dark_Theme_Secondary2_Alpha">#80332FD0</color>
 
 
 

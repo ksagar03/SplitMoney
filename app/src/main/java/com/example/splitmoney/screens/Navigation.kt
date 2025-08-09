@@ -1,6 +1,7 @@
 package com.example.splitmoney.screens
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,12 +76,18 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
                 },
                 onAddGroupClick = { navController.navigate("addGroup") },
                 onLogout = {
-                    authViewModel.logout()
-                    navController.navigate("auth") {
-                        popUpTo("auth") {
-                            inclusive = true
-                        }
+
+                        try{
+                            authViewModel.logout()
+                            navController.navigate("auth") {
+                                popUpTo("auth") {
+                                    inclusive = true
+                                }
+                            }
+                        }catch (e: Exception){
+                            Log.d("AuthState_Navigation_Issue", "Navigation: ")
                     }
+
                 },
                 onEditGroupClick = { groupID -> navController.navigate("editGroup/${groupID}") },
                 onDeleteGroupClick = { groupID -> viewModel.deleteGroup(groupID.toString()) }
@@ -120,7 +127,6 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
 
         composable("addExpense") {
             SelectGroupScreen(
-                groups = viewModel.groups.collectAsState().value,
                 onGroupSelected = { groupID ->
                     navController.navigate("addExpense/$groupID")
                 },
@@ -150,7 +156,7 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
         }
 
         composable("editExpense/{groupID}/{expenseID}"){ navBackStackEntry ->
-            val groupID = navBackStackEntry.arguments?.getString("groupName")
+            val groupID = navBackStackEntry.arguments?.getString("groupID")
             val expenseID = navBackStackEntry.arguments?.getString("expenseID")
 
             val expenseToEdit = viewModel.groups.collectAsState().value.find { it.id == groupID }?.expenses?.find { it.id == expenseID }

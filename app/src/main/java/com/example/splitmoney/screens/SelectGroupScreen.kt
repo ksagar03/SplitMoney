@@ -17,6 +17,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -24,18 +26,19 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.splitmoney.R
 import com.example.splitmoney.models.Group
 
 
 @Composable
 fun SelectGroupScreen(
-    groups: List<Group>,
     onGroupSelected: (String) -> Unit,
     onCreateNewGroup: () -> Unit,
-
+    viewModel: SplitMoneyViewModel = hiltViewModel()
     ) {
-//    val groups = viewModel.groups
+
+    val groups by viewModel.groups.collectAsState()
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = groups.isEmpty(),
@@ -102,6 +105,7 @@ fun SelectGroupScreen(
                             modifier = Modifier.alpha(animatedAlpha.value),
                             onEditClick = {},
                             onDeleteClick = {},
+                            isSelectGroupScreen = true,
                         )
                     }
                 }

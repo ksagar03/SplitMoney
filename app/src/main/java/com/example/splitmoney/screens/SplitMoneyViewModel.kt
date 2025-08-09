@@ -13,9 +13,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -37,6 +40,20 @@ class SplitMoneyViewModel @Inject constructor(
     val errorEvents: SharedFlow<String> = _errorEvents.asSharedFlow()
     val currentGroupExpenses: StateFlow<List<Expense>> = _currentGroupExpenses.asStateFlow()
 
+
+    val getUpdated_groups: StateFlow<List<Group>> = groupDao.getGroupsWithExpenses().map {
+        groupWithExpensesList ->
+        groupWithExpensesList.map { groupWithExpenses ->
+            groupWithExpenses.group.apply {
+                expenses = groupWithExpenses.expenses
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(1000),
+        initialValue = emptyList()
+    )
+
     private var currentGroupId: String? = null
 
 
@@ -55,9 +72,9 @@ class SplitMoneyViewModel @Inject constructor(
                             name = groupWithExpenses.group.name,
                             members = groupWithExpenses.group.members,
                         ).apply {
-                            if (groupWithExpenses.group.id != currentGroupId) {
+
                                 expenses = groupWithExpenses.expenses
-                            }
+
 
                         }
 
@@ -117,7 +134,6 @@ class SplitMoneyViewModel @Inject constructor(
                 Log.d("Group", "addGroup: $group")
             } catch (e: Exception) {
                 _errorEvents.emit("Failed to add group: ${e.message}")
-                Log.d("Error_ADD", "addGroup: ${e.message}")
             }
 
 
@@ -214,6 +230,23 @@ class SplitMoneyViewModel @Inject constructor(
             val paidAmount = group.expenses.filter { it.payer == member }.sumOf { it.amount }
             paidAmount - equalShare
         }
+    }
+
+    fun clearAllData(){
+        viewModelScope.launch {
+
+            try {
+                groupDao.clearAllGroups()
+                expenseDao.clearAllExpenses()
+
+                _groups.value = emptyList()
+                _uiState.value = UiState.Success
+            } catch (e: Exception){
+                _errorEvents.emit("Failed to clear data: ${e.message}")
+            }
+
+        }
+
     }
 }
 

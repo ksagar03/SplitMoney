@@ -43,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.splitmoney.R
 import com.example.splitmoney.signuporlogin.components.ButtonComponent
 import com.example.splitmoney.signuporlogin.components.DividerComponent
@@ -67,7 +68,7 @@ fun rememberAuthState(): AuthState {
 
 
 @Composable
-fun AuthScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
+fun AuthScreen(viewModel: AuthViewModel = hiltViewModel(), onSuccess: () -> Unit) {
     val authState = rememberAuthState()
     var userName by remember { mutableStateOf("") }
     var emailValue by remember { mutableStateOf("") }
@@ -76,14 +77,6 @@ fun AuthScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
 
 
     val infiniteTransition = rememberInfiniteTransition(label = "")
-    val gradientOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ), label = ""
-    )
 
 
     Surface(

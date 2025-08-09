@@ -1,10 +1,14 @@
 package com.example.splitmoney.signuporlogin
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.splitmoney.screens.SplitMoneyViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
 sealed class AuthStateInfo {
     data object Loading : AuthStateInfo()
@@ -12,17 +16,18 @@ sealed class AuthStateInfo {
     data object Unauthenticated : AuthStateInfo()
 }
 
-
-class AuthViewModel : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore,
+) : ViewModel() {
     private val _authState = MutableStateFlow<AuthStateInfo>(AuthStateInfo.Loading)
     val authState: StateFlow<AuthStateInfo> get() = _authState
 
-    private  val firebaseAuth: FirebaseAuth by lazy{
-        FirebaseAuth.getInstance()
-    }
-    private val firestore: FirebaseFirestore by lazy {
-        FirebaseFirestore.getInstance()
-    }
+
+//    init {
+//        startListeningToAuthState()
+//    }
 
     private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
         if (auth.currentUser != null) {
@@ -33,9 +38,9 @@ class AuthViewModel : ViewModel() {
     }
 
     fun startListeningToAuthState() {
-        firebaseAuth.addAuthStateListener(this.authStateListener)
+        auth.addAuthStateListener(this.authStateListener)
         // Check initial state
-        if (firebaseAuth.currentUser != null) {
+        if (auth.currentUser != null) {
             _authState.value = AuthStateInfo.Authenticated
         } else {
             _authState.value = AuthStateInfo.Unauthenticated
@@ -44,7 +49,7 @@ class AuthViewModel : ViewModel() {
 
     fun login(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
 
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+        auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     onResult(true, null)
@@ -62,7 +67,7 @@ class AuthViewModel : ViewModel() {
         password: String,
         onResult: (Boolean, String?) -> Unit,
     ) {
-        FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
+        auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
 //                onResult(true, null)
@@ -79,14 +84,14 @@ class AuthViewModel : ViewModel() {
         email: String,
         onResult: (Boolean, String?) -> Unit,
     ) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        val userId = auth.currentUser?.uid
         if (userId != null) {
             val user = hashMapOf(
                 "name" to name,
                 "email" to email
             )
 
-            FirebaseFirestore.getInstance().collection("users").document(userId)
+            firestore.collection("users").document(userId)
                 .set(user)
                 .addOnSuccessListener {
                     onResult(true, null)
@@ -100,12 +105,12 @@ class AuthViewModel : ViewModel() {
 
 
     fun logout() {
-        FirebaseAuth.getInstance().signOut()
+        auth.signOut()
     }
 
     override fun onCleared() {
         super.onCleared()
-        firebaseAuth.removeAuthStateListener(authStateListener)
+        auth.removeAuthStateListener(authStateListener)
     }
 
 

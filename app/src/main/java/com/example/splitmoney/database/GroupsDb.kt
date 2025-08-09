@@ -45,4 +45,7 @@ interface GroupDao {
     @Transaction
     @Query("SELECT * FROM `groups` WHERE id = :groupId")
     suspend fun getGroupWithExpenses(groupId: String): GroupWithExpenses?
+
+    @Query("DELETE FROM `groups`")
+    suspend fun clearAllGroups()
 }

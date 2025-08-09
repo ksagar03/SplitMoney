@@ -32,6 +32,7 @@ object DatabaseModule {
 
     @Provides
     fun provideExpenseDao(database: AppDatabase) = database.expenseDao()
+
 }
 
 

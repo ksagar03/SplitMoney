@@ -72,15 +72,15 @@ fun HomeScreen(
     onGroupClick: (String) -> Unit,
     onAddGroupClick: () -> Unit,
     onAddExpenseClick: () -> Unit,
-    onLogout: () -> Unit,
+    onLogout:() -> Unit,
     onEditGroupClick: (Any?) -> Unit,
     onDeleteGroupClick: (Any?) -> Unit,
 
     ) {
     val groups = viewModel.groups.collectAsState()
     Header(
+        viewModel,
         onLogoutClick = {
-            Log.d("Header", "Logout clicked")
             onLogout() },
     )
 
@@ -150,8 +150,8 @@ fun HomeScreen(
                                     group = group,
                                     onClick = { onGroupClick(group.id) },
                                     modifier = Modifier,
-                                    onEditClick = { onEditGroupClick(group.name) },
-                                    onDeleteClick = { onDeleteGroupClick(group.name) },
+                                    onEditClick = { onEditGroupClick(group.id) },
+                                    onDeleteClick = { onDeleteGroupClick(group.id) },
                                 )
                             }
                         }
@@ -208,6 +208,7 @@ fun GroupItem(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier,
+    isSelectGroupScreen: Boolean = false
 ) {
     val totalAmount = group.expenses.sumOf { exp -> exp.amount }
     var isPressed by remember { mutableStateOf(false) }
@@ -236,16 +237,26 @@ fun GroupItem(
             .fillMaxWidth()
             .padding(8.dp)
             .pointerInput(Unit) {
-                detectTapGestures(onLongPress = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    showIcon = !showIcon
+                if(!isSelectGroupScreen){
+                    detectTapGestures(onLongPress = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        showIcon = !showIcon
 
-                },
-                    onTap = {
-                        isPressed = !isPressed
-                        onClick()
-                    }
-                )
+                    },
+                        onTap = {
+                            isPressed = !isPressed
+                            onClick()
+                        }
+                    )
+                }else {
+                    detectTapGestures(
+                        onTap = {
+                            isPressed = !isPressed
+                            onClick()
+                        }
+                    )
+                }
+
             },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = animatedElevation),

@@ -46,6 +46,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,13 +60,16 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.example.splitmoney.R
+import com.example.splitmoney.screens.SplitMoneyViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Header(
-    onLogoutClick: () -> Unit,
+    viewModel: SplitMoneyViewModel,
+    onLogoutClick:  () -> Unit,
     onProfileClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
 
@@ -82,7 +86,7 @@ fun Header(
         delay(300)
         visible = true
     }
-
+    val scope = rememberCoroutineScope()
     BackHandler(enabled = expanded) {
         expanded = false
     }
@@ -230,6 +234,7 @@ fun Header(
                                         )
                                     },
                                     onClick = {
+                                        viewModel.clearAllData()
                                         onLogoutClick()
                                         expanded = false
                                     },

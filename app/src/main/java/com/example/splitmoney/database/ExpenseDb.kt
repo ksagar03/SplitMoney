@@ -26,8 +26,15 @@ interface ExpenseDao {
     fun getExpensesForGroup(groupId: String): Flow<List<Expense>>
 
 
+    //    To Delete All the expenses related to a group in the database when group is deleted
     @Query("DELETE FROM expenses WHERE groupId = :groupId")
     suspend fun deleteExpensesForGroupID(groupId: String)
+
+    @Query("DELETE FROM expenses")
+    fun clearAllExpenses()
+
+
+
 }
 //
 //
