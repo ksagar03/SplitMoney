@@ -114,7 +114,7 @@ fun AddGroupScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(if (isMemberInputVisible) " Hid Member Input" else "Add Members")
+            Text(if (isMemberInputVisible) " Hide Member Input" else "Add Members")
         }
         AnimatedVisibility(
             visible = isMemberInputVisible,

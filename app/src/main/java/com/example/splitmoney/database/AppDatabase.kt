@@ -7,7 +7,7 @@ import com.example.splitmoney.models.Expense
 import com.example.splitmoney.models.Group
 
 
-@Database(entities = [Group::class, Expense::class], version = 2)
+@Database(entities = [Group::class, Expense::class], version = 3)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase(){
     abstract fun groupDao(): GroupDao

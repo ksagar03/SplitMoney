@@ -2,6 +2,8 @@ package com.example.splitmoney.screens
 
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.splitmoney.database.ExpenseDao
@@ -10,6 +12,7 @@ import com.example.splitmoney.models.Expense
 import com.example.splitmoney.models.Group
 import com.example.splitmoney.models.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -67,11 +70,7 @@ class SplitMoneyViewModel @Inject constructor(
             try {
                 groupDao.getGroupsWithExpenses().collect { groupWithExpensesList ->
                     _groups.value = groupWithExpensesList.map { groupWithExpenses ->
-                        Group(
-                            id = groupWithExpenses.group.id,
-                            name = groupWithExpenses.group.name,
-                            members = groupWithExpenses.group.members,
-                        ).apply {
+                        groupWithExpenses.group.copy().apply {
 
                                 expenses = groupWithExpenses.expenses
 
@@ -173,12 +172,13 @@ class SplitMoneyViewModel @Inject constructor(
         }
     }
 
-    fun addExpenseToGroup(groupId: String, expense: Expense) {
+    fun addExpenseToGroup(groupId: String, expense: Expense, onExpenseAdded: () -> Unit) {
 
         viewModelScope.launch {
             try {
                 val expenseWithGroupId = expense.copy(groupId = groupId)
                 expenseDao.insertExpense(expenseWithGroupId)
+                onExpenseAdded()
 
             } catch (e: Exception) {
                 _errorEvents.emit("Failed to add expense: ${e.message}")
@@ -197,10 +197,11 @@ class SplitMoneyViewModel @Inject constructor(
 
     }
 
-    fun editExpense(expenseID: String, newExpense: Expense) {
+    fun editExpense(expenseID: String, newExpense: Expense, onExpenseEdited: () -> Unit) {
         viewModelScope.launch {
             try {
                 expenseDao.updateExpense(newExpense.copy(id = expenseID))
+                onExpenseEdited()
             } catch (e: Exception) {
                 _errorEvents.emit("Failed to edit expense: ${e.message}")
             }
@@ -230,6 +231,46 @@ class SplitMoneyViewModel @Inject constructor(
             val paidAmount = group.expenses.filter { it.payer == member }.sumOf { it.amount }
             paidAmount - equalShare
         }
+    }
+
+    fun calculateBalancesV2(groupId: String): Map<String , Map<String, Double>>{
+        val group = _groups.value.find { it.id == groupId } ?: return emptyMap()
+        if (group.expenses.isEmpty()) return emptyMap()
+
+        val totalAmount = group.expenses.sumOf { it.amount  }
+        val equalShare = totalAmount / group.members.size
+
+        val balances = group.members.associateWith { member ->
+            val paidAmount = group.expenses.filter { it.payer == member }.sumOf {it.amount}
+            paidAmount - equalShare
+        }
+
+//        now i need to separate the creditors and debtors (i.e if the balance is positive then it is a creditor and vice versa)
+
+        val creditors = balances.filter { it.value > 0 }.toMutableMap()
+        val debtors = balances.filter { it.value < 0 }.mapValues { -it.value }.toMutableMap()
+
+        val settlements = mutableMapOf<String, MutableMap<String, Double>>()
+
+        group.members.forEach { member  ->
+            settlements[member] = mutableMapOf()
+        }
+        for((debtor, debtAmt) in debtors){
+            var remainingDept = debtAmt
+            for((creditor, creditAmt) in creditors){
+                if(creditAmt == 0.0) continue
+                val settlementAmount = minOf(remainingDept, creditAmt )
+                if(settlementAmount > 0){
+                    settlements.getOrPut(debtor){ mutableMapOf() }[creditor] = settlementAmount
+
+                    remainingDept -= settlementAmount
+                    creditors[creditor] = creditAmt - settlementAmount
+                    if (remainingDept == 0.0) break
+                }
+            }
+        }
+        return settlements
+
     }
 
     fun clearAllData(){

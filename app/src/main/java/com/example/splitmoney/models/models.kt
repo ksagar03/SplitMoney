@@ -1,6 +1,7 @@
 package com.example.splitmoney.models
 
 
+import androidx.compose.runtime.Immutable
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Ignore
@@ -8,6 +9,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import java.util.UUID
 import kotlin.collections.emptyList
+
 
 @Entity(tableName = "expenses")
 data class Expense(
@@ -18,6 +20,7 @@ data class Expense(
     var groupId: String?
 )
 
+@Immutable
 @Entity(tableName = "groups")
 data class  Group(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),

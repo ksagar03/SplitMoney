@@ -236,7 +236,8 @@ fun AddExpenseScreen(
                                         amount,
                                         selectedPayer,
                                         group?.id ?: ""
-                                    )
+                                    ),
+                                    onExpenseEdited = {onExpenseAdded()}
 
                                 )
                             } else {
@@ -247,10 +248,10 @@ fun AddExpenseScreen(
                                         amount,
                                         selectedPayer,
                                         group?.id ?: ""
-                                    )
+                                    ),
+                                    onExpenseAdded = { onExpenseAdded() }
                                 )
                             }
-                            onExpenseAdded()
                         }
                     },
                     modifier = Modifier.align(Alignment.End),

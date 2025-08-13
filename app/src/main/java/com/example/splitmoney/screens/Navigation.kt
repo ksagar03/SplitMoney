@@ -110,7 +110,7 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
         composable("balanceView/{groupID}") { navBackStackEntry ->
             val groupID = navBackStackEntry.arguments?.getString("groupID")
             if (groupID != null) {
-                BalanceSummaryScreen(
+                BalanceSummaryScreenV2(
                     viewModel = viewModel,
                     groupID = groupID,
                     onBlockClick = {
