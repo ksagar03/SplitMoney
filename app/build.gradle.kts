@@ -37,6 +37,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
     buildFeatures {
         compose = true
@@ -83,6 +84,7 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation (libs.kotlin.stdlib)
     implementation (libs.kotlin.reflect)
+    implementation("androidx.work:work-runtime-ktx:2.10.3")
 
 
 }

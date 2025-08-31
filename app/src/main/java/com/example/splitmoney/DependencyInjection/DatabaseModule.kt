@@ -33,6 +33,9 @@ object DatabaseModule {
     @Provides
     fun provideExpenseDao(database: AppDatabase) = database.expenseDao()
 
+    @Provides
+    fun providePendingOperationDao(database: AppDatabase) = database.pendingOperationDao()
+
 }
 
 

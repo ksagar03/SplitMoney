@@ -1,6 +1,7 @@
 package com.example.splitmoney.screens
 
 
+import NetworkMonitor
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -8,8 +9,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.splitmoney.database.ExpenseDao
 import com.example.splitmoney.database.GroupDao
+import com.example.splitmoney.database.PendingOperationDao
+import com.example.splitmoney.firebase.SyncRepository
 import com.example.splitmoney.models.Expense
 import com.example.splitmoney.models.Group
+import com.example.splitmoney.models.SyncStatus
 import com.example.splitmoney.models.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -20,6 +24,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -31,6 +36,9 @@ import javax.inject.Inject
 class SplitMoneyViewModel @Inject constructor(
     private val groupDao: GroupDao,
     private val expenseDao: ExpenseDao,
+    private val syncRepository: SyncRepository,
+    private val networkMonitor: NetworkMonitor,
+    private val pendingOperationDao: PendingOperationDao
 ) : ViewModel() {
     private val _groups = MutableStateFlow<List<Group>>(emptyList())
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -44,24 +52,72 @@ class SplitMoneyViewModel @Inject constructor(
     val currentGroupExpenses: StateFlow<List<Expense>> = _currentGroupExpenses.asStateFlow()
 
 
-    val getUpdated_groups: StateFlow<List<Group>> = groupDao.getGroupsWithExpenses().map {
-        groupWithExpensesList ->
-        groupWithExpensesList.map { groupWithExpenses ->
-            groupWithExpenses.group.apply {
-                expenses = groupWithExpenses.expenses
-            }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(1000),
-        initialValue = emptyList()
-    )
+//    val getUpdated_groups: StateFlow<List<Group>> = groupDao.getGroupsWithExpenses().map {
+//        groupWithExpensesList ->
+//        groupWithExpensesList.map { groupWithExpenses ->
+//            groupWithExpenses.group.apply {
+//                expenses = groupWithExpenses.expenses
+//            }
+//        }
+//    }.stateIn(
+//        scope = viewModelScope,
+//        started = SharingStarted.WhileSubscribed(1000),
+//        initialValue = emptyList()
+//    )
+
+
+    private val _networkStatus = MutableStateFlow<Boolean?>(null)
+    val networkStatus = _networkStatus.asStateFlow()
+
+    private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
+    val syncStatus = _syncStatus.asStateFlow()
 
     private var currentGroupId: String? = null
 
 
     init {
+        startNetworkMonitoring()
+        monitorPendingOperations()
         loadGroups()
+    }
+
+    private fun startNetworkMonitoring() {
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { isOnline ->
+                _networkStatus.value = isOnline
+                if (isOnline) {
+                    manualSync()
+                }
+            }
+        }
+
+    }
+
+    private fun monitorPendingOperations() {
+        viewModelScope.launch {
+            while(true){
+                val pendingCount = pendingOperationDao.getPendingOperationCount()
+                _syncStatus.value = if(pendingCount > 0){
+                    SyncStatus.Pending(pendingCount)
+                }else {
+                    SyncStatus.Idle
+                }
+                delay(5000)
+            }
+        }
+
+    }
+
+    fun manualSync() {
+        viewModelScope.launch {
+            _syncStatus.value = SyncStatus.Syncing
+            try{
+                syncRepository.syncPendingOperations()
+                _syncStatus.value = SyncStatus.Success
+            }catch (e: Exception){
+                _syncStatus.value = SyncStatus.Error(e.message)
+            }
+        }
     }
 
     private fun loadGroups() {
@@ -72,7 +128,7 @@ class SplitMoneyViewModel @Inject constructor(
                     _groups.value = groupWithExpensesList.map { groupWithExpenses ->
                         groupWithExpenses.group.copy().apply {
 
-                                expenses = groupWithExpenses.expenses
+                            expenses = groupWithExpenses.expenses
 
 
                         }
@@ -233,15 +289,15 @@ class SplitMoneyViewModel @Inject constructor(
         }
     }
 
-    fun calculateBalancesV2(groupId: String): Map<String , Map<String, Double>>{
+    fun calculateBalancesV2(groupId: String): Map<String, Map<String, Double>> {
         val group = _groups.value.find { it.id == groupId } ?: return emptyMap()
         if (group.expenses.isEmpty()) return emptyMap()
 
-        val totalAmount = group.expenses.sumOf { it.amount  }
+        val totalAmount = group.expenses.sumOf { it.amount }
         val equalShare = totalAmount / group.members.size
 
         val balances = group.members.associateWith { member ->
-            val paidAmount = group.expenses.filter { it.payer == member }.sumOf {it.amount}
+            val paidAmount = group.expenses.filter { it.payer == member }.sumOf { it.amount }
             paidAmount - equalShare
         }
 
@@ -252,16 +308,16 @@ class SplitMoneyViewModel @Inject constructor(
 
         val settlements = mutableMapOf<String, MutableMap<String, Double>>()
 
-        group.members.forEach { member  ->
+        group.members.forEach { member ->
             settlements[member] = mutableMapOf()
         }
-        for((debtor, debtAmt) in debtors){
+        for ((debtor, debtAmt) in debtors) {
             var remainingDept = debtAmt
-            for((creditor, creditAmt) in creditors){
-                if(creditAmt == 0.0) continue
-                val settlementAmount = minOf(remainingDept, creditAmt )
-                if(settlementAmount > 0){
-                    settlements.getOrPut(debtor){ mutableMapOf() }[creditor] = settlementAmount
+            for ((creditor, creditAmt) in creditors) {
+                if (creditAmt == 0.0) continue
+                val settlementAmount = minOf(remainingDept, creditAmt)
+                if (settlementAmount > 0) {
+                    settlements.getOrPut(debtor) { mutableMapOf() }[creditor] = settlementAmount
 
                     remainingDept -= settlementAmount
                     creditors[creditor] = creditAmt - settlementAmount
@@ -273,7 +329,7 @@ class SplitMoneyViewModel @Inject constructor(
 
     }
 
-    fun clearAllData(){
+    fun clearAllData() {
         viewModelScope.launch {
 
             try {
@@ -282,7 +338,7 @@ class SplitMoneyViewModel @Inject constructor(
 
                 _groups.value = emptyList()
                 _uiState.value = UiState.Success
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 _errorEvents.emit("Failed to clear data: ${e.message}")
             }
 

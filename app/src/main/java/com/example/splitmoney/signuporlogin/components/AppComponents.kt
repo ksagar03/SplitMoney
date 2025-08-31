@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -81,19 +82,11 @@ fun UserTextFields(
     iconDescription: String,
     onValueChange: (String) -> Unit,
     textValue: String,
+    focusRequester: FocusRequester,
+    keyboardActions: KeyboardActions,
+    keyboardOptions: KeyboardOptions
 ) {
-    val focusRequester = remember { FocusRequester() }
 
-//    LaunchedEffect(Unit) {
-////        delay(2000L)
-//        if (labelText == "Name") {
-//            focusRequester.requestFocus()
-//        }else if(labelText == "Mail"){
-//            focusRequester.requestFocus()
-//
-//        }
-//    }
-//    var textValue by remember { mutableStateOf("") }
 
     OutlinedTextField(
         modifier = Modifier
@@ -112,7 +105,8 @@ fun UserTextFields(
             unfocusedTextColor = colorResource(id = R.color.Dark_Theme_Text)
 
         ),
-        keyboardOptions = KeyboardOptions.Default,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         value = textValue,
         onValueChange = {
             onValueChange(it)
@@ -133,6 +127,9 @@ fun UserPasswordTextFiled(
     iconDescription: String,
     onValueChange: (String) -> Unit,
     passwordValue: String,
+    focusRequester: FocusRequester,
+    keyboardActions: KeyboardActions,
+    keyboardOptions: KeyboardOptions
 ) {
 
 //    var passwordValue by remember { mutableStateOf("") }
@@ -143,7 +140,8 @@ fun UserPasswordTextFiled(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 20.dp)
-            .clip(RoundedCornerShape(topStart = 20.dp, bottomEnd = 20.dp)),
+            .clip(RoundedCornerShape(topStart = 20.dp, bottomEnd = 20.dp))
+            .focusRequester(focusRequester),
         label = { Text(text = labelText) },
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = colorResource(id = R.color.Dark_Theme_Icon),
@@ -154,8 +152,8 @@ fun UserPasswordTextFiled(
             focusedLeadingIconColor = colorResource(id = R.color.Dark_Theme_Icon),
             focusedTrailingIconColor = colorResource(id = R.color.Dark_Theme_Icon),
         ),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         value = passwordValue,
         onValueChange = {
             onValueChange(it)

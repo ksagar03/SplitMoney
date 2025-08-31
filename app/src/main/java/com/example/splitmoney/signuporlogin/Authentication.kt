@@ -2,6 +2,7 @@ package com.example.splitmoney.signuporlogin
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
@@ -37,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -76,8 +79,9 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel(), onSuccess: () -> Unit
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
 
-    val infiniteTransition = rememberInfiniteTransition(label = "")
-
+    val focusRequester1 = remember { FocusRequester() }
+    val focusRequester2 = remember { FocusRequester() }
+    val focusRequester3 = remember { FocusRequester() }
 
     Surface(
         color = colorResource(id = R.color.Dark_Theme),
@@ -86,17 +90,6 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel(), onSuccess: () -> Unit
         Box(
             modifier = Modifier
                 .fillMaxSize()
-//                .background(
-//                    brush = Brush.linearGradient(
-//                        colors = listOf(
-//                            colorResource(id = R.color.Dark_Theme_Secondary),
-//                            colorResource(id = R.color.Dark_Theme_alert),
-//
-//                            ),
-//                        start = Offset(0f, gradientOffset),
-//                        end = Offset(1f, 1f - gradientOffset)
-//                    )
-//                )
                 .imePadding()
         ) {
 
@@ -105,9 +98,8 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel(), onSuccess: () -> Unit
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(28.dp),
-//                verticalArrangement = Arrangement.Bottom,
-//                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(28.dp)
+                    .systemBarsPadding(),
             ) {
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -115,7 +107,6 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel(), onSuccess: () -> Unit
                     targetState = authState.isSignUpScreen,
                     transitionSpec = {
                         slideInVertically { height -> height } + fadeIn() togetherWith slideOutVertically { height -> height } + fadeOut()
-
                     }, label = ""
                 ) { isSignUp ->
                     Column {
@@ -139,16 +130,18 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel(), onSuccess: () -> Unit
                 Spacer(modifier = Modifier.height(50.dp))
                 AnimatedVisibility(
                     visible = authState.isSignUpScreen,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically()
+                    enter = fadeIn() ,
+                    exit = fadeOut()
                 ) {
                     UserTextFields(
                         labelText = stringResource(id = R.string.userName),
                         iconData = painterResource(id = R.drawable.account_icon),
                         iconDescription = "userNameIcon",
                         textValue = userName,
-                        onValueChange = { userName = it }
-
+                        onValueChange = { userName = it },
+                        focusRequester = focusRequester1,
+                        keyboardActions = viewModel.keyboardActions(focusRequester2),
+                        keyboardOptions = viewModel.keyboardOptions(false)
                     )
                 }
 
@@ -157,7 +150,11 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel(), onSuccess: () -> Unit
                     iconData = painterResource(id = R.drawable.outline_email_icon),
                     iconDescription = "userEmailIcon",
                     textValue = emailValue,
-                    onValueChange = { emailValue = it }
+                    onValueChange = { emailValue = it },
+                    focusRequester = focusRequester2,
+                    keyboardActions = viewModel.keyboardActions(focusRequester3),
+                    keyboardOptions = viewModel.keyboardOptions(false)
+
 
                 )
                 UserPasswordTextFiled(
@@ -165,7 +162,10 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel(), onSuccess: () -> Unit
                     iconData = painterResource(id = R.drawable.baseline_lock_icon),
                     iconDescription = "userNameIcon",
                     passwordValue = passwordValue,
-                    onValueChange = { passwordValue = it }
+                    onValueChange = { passwordValue = it },
+                    focusRequester = focusRequester3,
+                    keyboardActions = viewModel.keyboardActions(focusRequester3),
+                    keyboardOptions = viewModel.keyboardOptions(true)
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 errorMessage?.let {

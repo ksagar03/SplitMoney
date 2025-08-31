@@ -26,7 +26,7 @@ fun Navigation(viewModel: SplitMoneyViewModel, authViewModel: AuthViewModel) {
         when (authStateInfo.value) {
             AuthStateInfo.Authenticated -> {
                 navController.navigate("home") {
-                    popUpTo("auth") { inclusive = true }
+                    popUpTo("home") { inclusive = true }
 
                 }
             }

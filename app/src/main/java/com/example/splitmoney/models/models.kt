@@ -47,3 +47,27 @@ sealed class UiState {
     data object Success: UiState()
     data class Error(val message: String): UiState()
 }
+
+
+@Entity(tableName = "pending_operations")
+data class PendingOperation(
+    @PrimaryKey(autoGenerate = true) val id: Long =0,
+    val operationType: String,
+    val entityType: String,
+    val entityId: String,
+    val serializedData: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    var retryCount: Int = 0,
+    var lastAttempt: Long = 0
+
+)
+
+
+sealed class SyncStatus {
+    object Idle : SyncStatus()
+    data class Pending(val count: Int) : SyncStatus()
+    object Syncing : SyncStatus()
+    object Success : SyncStatus()
+    data class Error(val message: String?) : SyncStatus()
+}
+

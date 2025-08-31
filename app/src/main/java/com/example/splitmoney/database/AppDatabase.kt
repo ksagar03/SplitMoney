@@ -12,4 +12,6 @@ import com.example.splitmoney.models.Group
 abstract class AppDatabase : RoomDatabase(){
     abstract fun groupDao(): GroupDao
     abstract fun expenseDao():ExpenseDao
+
+    abstract  fun pendingOperationDao(): PendingOperationDao
 }

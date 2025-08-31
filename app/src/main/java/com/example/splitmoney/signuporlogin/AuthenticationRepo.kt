@@ -1,11 +1,19 @@
 package com.example.splitmoney.signuporlogin
 
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.ImeOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitmoney.screens.SplitMoneyViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
@@ -113,7 +121,27 @@ class AuthViewModel @Inject constructor(
         auth.removeAuthStateListener(authStateListener)
     }
 
+    fun keyboardOptions(isPasswordField: Boolean): KeyboardOptions {
+        return if(!isPasswordField){
+
+            KeyboardOptions(imeAction = ImeAction.Next)
+        }else {
+            KeyboardOptions(keyboardType = KeyboardType.Password)
+        }
+
+
+
+    }
+    fun keyboardActions(focusRequester: FocusRequester): KeyboardActions {
+        return KeyboardActions(onNext = {
+            focusRequester.requestFocus()})
+    }
+
+
+
 
 }
+
+
 
 
