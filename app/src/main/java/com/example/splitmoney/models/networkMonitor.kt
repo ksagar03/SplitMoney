@@ -1,3 +1,6 @@
+package com.example.splitmoney.models
+
+
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network

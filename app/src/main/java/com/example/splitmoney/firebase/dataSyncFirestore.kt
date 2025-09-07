@@ -1,6 +1,5 @@
 package com.example.splitmoney.firebase
 
-import NetworkMonitor
 import android.content.Context
 
 import android.util.Log
@@ -10,6 +9,7 @@ import com.example.splitmoney.database.GroupDao
 import com.example.splitmoney.database.PendingOperationDao
 import com.example.splitmoney.models.Expense
 import com.example.splitmoney.models.Group
+import com.example.splitmoney.models.NetworkMonitor
 import com.example.splitmoney.models.PendingOperation
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -37,7 +37,7 @@ class SyncRepository @Inject constructor(
 ) {
 
 
-    private val currentUser: String?
+    private val currentUser: String
         get() = auth.currentUser?.uid ?: throw IllegalStateException("User not authenticated")
 
 
@@ -124,42 +124,42 @@ class SyncRepository @Inject constructor(
 
 
     suspend fun updateGroupInFirebase(group: Group) {
-            try {
-                val updates = hashMapOf<String, Any>(
-                    "name" to group.name,
-                    "members" to group.members,
-                    "updatedAt" to FieldValue.serverTimestamp()
-                )
-                firestore.collection("groups").document(group.id).update(updates).await()
-                groupDao.updateGroup(group)
-            } catch (e: Exception) {
-                Log.d("Firebase", "updateGroupInFirebase: Failed to update group in Firebase $e ")
-                throw SyncException("Failed to update group in Firebase", e)
+        try {
+            val updates = hashMapOf<String, Any>(
+                "name" to group.name,
+                "members" to group.members,
+                "updatedAt" to FieldValue.serverTimestamp()
+            )
+            firestore.collection("groups").document(group.id).update(updates).await()
+            groupDao.updateGroup(group)
+        } catch (e: Exception) {
+            Log.d("Firebase", "updateGroupInFirebase: Failed to update group in Firebase $e ")
+            throw SyncException("Failed to update group in Firebase", e)
 
-            }
+        }
 
     }
 
     suspend fun updateExpenseInFirebase(expense: Expense) {
-            try {
-                val updates = hashMapOf<String, Any>(
-                    "description" to expense.description,
-                    "amount" to expense.amount,
-                    "payer" to expense.payer,
-                    "updatedAt" to FieldValue.serverTimestamp()
+        try {
+            val updates = hashMapOf<String, Any>(
+                "description" to expense.description,
+                "amount" to expense.amount,
+                "payer" to expense.payer,
+                "updatedAt" to FieldValue.serverTimestamp()
 
-                )
-                firestore.collection("expenses").document(expense.id).update(updates).await()
-                expenseDao.updateExpense(expense)
+            )
+            firestore.collection("expenses").document(expense.id).update(updates).await()
+            expenseDao.updateExpense(expense)
 
-            } catch (e: Exception) {
-                Log.d(
-                    "Firebase",
-                    "updateExpenseInFirebase: Failed to update expense in Firebase $e "
-                )
-                throw SyncException("Failed to update expense in Firebase", e)
+        } catch (e: Exception) {
+            Log.d(
+                "Firebase",
+                "updateExpenseInFirebase: Failed to update expense in Firebase $e "
+            )
+            throw SyncException("Failed to update expense in Firebase", e)
 
-            }
+        }
     }
 
     suspend fun deleteGroupFromFirebase(groupId: String) {
@@ -199,19 +199,32 @@ class SyncRepository @Inject constructor(
 
     }
 
-    suspend fun syncGroups() {
-        try {
-            val groups =
-                currentUser?.let {
-                    firestore.collection("groups").whereArrayContains("members", it)
-                }
-                    ?.get()?.await()
+    suspend fun syncGroups(): Boolean {
 
-            groups?.forEach { doc ->
+        if (!isOnline()) return false
+
+
+        try {
+            Log.d("UserIDD", "syncGroups: $currentUser")
+            val groups =
+                firestore.collection("groups").whereEqualTo("created By", currentUser).get().await()
+//            Log.d("FetchedG", "groups: ${groups?.size()}")
+            if (groups == null) {
+                return true
+            }
+
+            groups.forEach { doc ->
+                Log.d("ddd", "doc: ${doc.id} && data:: ${doc.data}")
                 val firebaseGroup = doc.toObject(Group::class.java)
+                Log.d(
+                    "SYNC_DEBUG",
+                    "Deserialized -> ID: ${firebaseGroup.id}, Name: ${firebaseGroup.name}, Members: ${firebaseGroup.members}"
+                )
+                syncExpenses(firebaseGroup.id)
                 groupDao.insertGroup(firebaseGroup)
             }
 
+            return true
         } catch (e: Exception) {
             throw SyncException("Failed to sync groups", e)
         }
@@ -222,12 +235,11 @@ class SyncRepository @Inject constructor(
     suspend fun syncExpenses(groupId: String) {
         val expense =
             firestore.collection("expenses").whereEqualTo("groupId", groupId).get().await()
-
+        Log.d("FETCHED_EXP", "$expense")
         expense.forEach { doc ->
             val firebaseExpense = doc.toObject(Expense::class.java)
             expenseDao.insertExpense(firebaseExpense)
         }
-
     }
 
     private suspend fun queueOperation(
@@ -250,12 +262,10 @@ class SyncRepository @Inject constructor(
     }
 
 
-
-    fun startNetworkMonitoring(scope : CoroutineScope) {
+    fun startNetworkMonitoring(scope: CoroutineScope) {
         scope.launch {
-            networkMonitor.isOnline.collect {
-                isOnline ->
-                if(isOnline){
+            networkMonitor.isOnline.collect { isOnline ->
+                if (isOnline) {
                     syncPendingOperations()
                 }
             }
@@ -293,14 +303,14 @@ class SyncRepository @Inject constructor(
                     "DELETE_GROUP" -> deleteGroupFromFirebase(ops.entityId)
                     "DELETE_EXPENSE" -> deleteExpenseFromFirebase(ops.entityId)
                 }
-                pendingOperationDao.deleteOperation(ops.id)
+                pendingOperationDao.deleteOperation(ops)
             } catch (e: Exception) {
                 ops.retryCount++
                 ops.lastAttempt = System.currentTimeMillis()
                 pendingOperationDao.updateOperation(ops)
 
                 if (ops.retryCount >= 5) {
-                    pendingOperationDao.deleteOperation(ops.id)
+                    pendingOperationDao.deleteOperation(ops)
 //                    if it is not synced then will delete the operation from the database also need to notify the user regarding this failure
 
                 }

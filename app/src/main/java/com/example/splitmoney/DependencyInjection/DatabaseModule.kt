@@ -20,11 +20,10 @@ object DatabaseModule {
         @ApplicationContext context: Context,
     ): AppDatabase {
         return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "split-money.db"
-        ).fallbackToDestructiveMigration()
-            .build()
+                context,
+                AppDatabase::class.java,
+                "split-money.db"
+            ).fallbackToDestructiveMigration(true).build()
     }
 
     @Provides

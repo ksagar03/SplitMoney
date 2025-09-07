@@ -17,7 +17,7 @@ interface PendingOperationDao {
     suspend fun updateOperation(operation: PendingOperation)
 
     @Delete
-    suspend fun deleteOperation(id: Long)
+    suspend fun deleteOperation(operation: PendingOperation)
 
     @Query("SELECT * FROM pending_operations ORDER BY createdAt ASC")
     suspend fun getPendingOperations(): List<PendingOperation>

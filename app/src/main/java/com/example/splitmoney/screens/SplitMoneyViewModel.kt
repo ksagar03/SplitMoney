@@ -1,7 +1,6 @@
 package com.example.splitmoney.screens
 
 
-import NetworkMonitor
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,6 +12,7 @@ import com.example.splitmoney.database.PendingOperationDao
 import com.example.splitmoney.firebase.SyncRepository
 import com.example.splitmoney.models.Expense
 import com.example.splitmoney.models.Group
+import com.example.splitmoney.models.NetworkMonitor
 import com.example.splitmoney.models.SyncStatus
 import com.example.splitmoney.models.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -38,7 +39,7 @@ class SplitMoneyViewModel @Inject constructor(
     private val expenseDao: ExpenseDao,
     private val syncRepository: SyncRepository,
     private val networkMonitor: NetworkMonitor,
-    private val pendingOperationDao: PendingOperationDao
+    private val pendingOperationDao: PendingOperationDao,
 ) : ViewModel() {
     private val _groups = MutableStateFlow<List<Group>>(emptyList())
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -78,7 +79,9 @@ class SplitMoneyViewModel @Inject constructor(
     init {
         startNetworkMonitoring()
         monitorPendingOperations()
-        loadGroups()
+//        loadGroups()
+        observeLocalGroups()
+        performInitialSync()
     }
 
     private fun startNetworkMonitoring() {
@@ -95,11 +98,11 @@ class SplitMoneyViewModel @Inject constructor(
 
     private fun monitorPendingOperations() {
         viewModelScope.launch {
-            while(true){
+            while (true) {
                 val pendingCount = pendingOperationDao.getPendingOperationCount()
-                _syncStatus.value = if(pendingCount > 0){
+                _syncStatus.value = if (pendingCount > 0) {
                     SyncStatus.Pending(pendingCount)
-                }else {
+                } else {
                     SyncStatus.Idle
                 }
                 delay(5000)
@@ -111,37 +114,118 @@ class SplitMoneyViewModel @Inject constructor(
     fun manualSync() {
         viewModelScope.launch {
             _syncStatus.value = SyncStatus.Syncing
-            try{
+            try {
                 syncRepository.syncPendingOperations()
                 _syncStatus.value = SyncStatus.Success
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 _syncStatus.value = SyncStatus.Error(e.message)
             }
         }
     }
 
-    private fun loadGroups() {
+//    private fun loadGroups() {
+//        viewModelScope.launch {
+//            _uiState.value = UiState.Loading
+//            try {
+//                groupDao.getGroupsWithExpenses().collect { groupWithExpensesList ->
+//                    if (groupWithExpensesList.isNotEmpty()) {
+//
+//                        _groups.value = groupWithExpensesList.map { groupWithExpenses ->
+//                            groupWithExpenses.group.copy().apply {
+//
+//                                expenses = groupWithExpenses.expenses
+//
+//
+//                            }
+//                        }
+//                        _uiState.value = UiState.Success
+//                    } else {
+//                        _groups.value = emptyList()
+//                        _uiState.value = UiState.Empty
+//
+//                    }
+//
+//                    if (syncRepository.isOnline()) {
+//                        Log.d("ViewModel_DEBUG", "Calling syncGroups from loadGroups collect block.")
+//                        val syncSuccess = syncRepository.syncGroups()
+//
+//                        if (syncSuccess) {
+////                            reloadGroups()
+////                            _uiState.value = UiState.Success
+//                            Log.d("ViewModel_DEBUG", "syncGroups successful, local groups might be reloaded by Room Flow.")
+//                        }
+//                    }
+//
+//                }
+//            } catch (e: Exception) {
+//                _uiState.value = UiState.Error("Failed to load groups: ${e.message}")
+//
+//            }
+//        }
+//    }
+
+    private fun observeLocalGroups(){
         viewModelScope.launch {
-            _uiState.value = UiState.Loading
-            try {
-                groupDao.getGroupsWithExpenses().collect { groupWithExpensesList ->
+
+            groupDao.getGroupsWithExpenses().collect { groupWithExpensesList ->
+                Log.d(
+                    "ViewModel_DEBUG",
+                    "observeLocalGroups: Data updated from Room. Size: ${groupWithExpensesList.size}"
+                )
+                if (groupWithExpensesList.isNotEmpty()) {
                     _groups.value = groupWithExpensesList.map { groupWithExpenses ->
                         groupWithExpenses.group.copy().apply {
-
                             expenses = groupWithExpenses.expenses
-
-
                         }
-
                     }
                     _uiState.value = UiState.Success
+                }else {
+                    _groups.value = emptyList()
+                    _uiState.value = UiState.Empty
 
                 }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error("Failed to load groups: ${e.message}")
-
             }
         }
+    }
+
+    private fun performInitialSync(){
+        viewModelScope.launch {
+            if(syncRepository.isOnline()){
+                _uiState.value = UiState.Loading
+                Log.d("ViewModel_DEBUG", "performInitialSync: Attempting to sync groups with Firestore.")
+                try {
+                    val syncSuccess = syncRepository.syncGroups()
+                    if(syncSuccess){
+                        Log.d("ViewModel_DEBUG", "performInitialSync: syncGroups successful. Room will update via observeLocalGroups.")
+
+                    }else{
+                        Log.w("ViewModel_DEBUG", "performInitialSync: syncGroups reported failure or was offline.")
+                        if (_uiState.value == UiState.Loading) { // If still loading from this sync
+                            _uiState.value = if (_groups.value.isEmpty()) UiState.Empty else UiState.Success
+                        }
+                    }
+                }catch (e: Exception){
+                    Log.e("ViewModel_DEBUG", "performInitialSync: Error during syncGroups: ${e.message}", e)
+                    _errorEvents.emit("Failed to sync groups: ${e.message}")
+                    if (_uiState.value == UiState.Loading) { // If still loading from this sync
+                        _uiState.value = UiState.Error("Sync failed: ${e.message}")
+                    }
+                }
+            }else {
+                Log.d("ViewModel_DEBUG", "performInitialSync: Not online, skipping sync.")
+                // Ensure UI state is not stuck in Loading if this was the only path to Success/Empty
+                if (_uiState.value == UiState.Loading && _groups.value.isEmpty()){
+                    _uiState.value = UiState.Empty
+                } else if (_uiState.value == UiState.Loading && _groups.value.isNotEmpty()){
+                    _uiState.value = UiState.Success
+                }
+            }
+        }
+    }
+
+    private suspend fun reloadGroups() {
+        val updatedGroups = groupDao.getGroupsWithExpenses().first()
+        _groups.value = updatedGroups.map { it.group.copy().apply { expenses = it.expenses } }
     }
 
 //    fun refreshGroupExpenses(groupID: String){
@@ -185,8 +269,8 @@ class SplitMoneyViewModel @Inject constructor(
                     name = name,
                     members = members
                 )
-                groupDao.insertGroup(group)
-                Log.d("Group", "addGroup: $group")
+                syncRepository.addGroupToFirebase(group)
+//                Log.d("Group", "addGroup: $group")
             } catch (e: Exception) {
                 _errorEvents.emit("Failed to add group: ${e.message}")
             }
@@ -217,11 +301,12 @@ class SplitMoneyViewModel @Inject constructor(
     fun deleteGroup(groupId: String) {
         viewModelScope.launch {
             try {
-                val groupTouchDelete = _groups.value.find { it.id == groupId }
-                groupTouchDelete?.let {
-                    expenseDao.deleteExpensesForGroupID(groupId)
-                    groupDao.deleteGroup(it)
-                }
+//                val groupTouchDelete = _groups.value.find { it.id == groupId }
+//                groupTouchDelete?.let {
+//                    expenseDao.deleteExpensesForGroupID(groupId)
+//                    groupDao.deleteGroup(it)
+//                }
+                syncRepository.deleteGroupFromFirebase(groupId)
             } catch (e: Exception) {
                 _errorEvents.emit("Failed to delete group: ${e.message}")
             }
@@ -232,8 +317,9 @@ class SplitMoneyViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val expenseWithGroupId = expense.copy(groupId = groupId)
-                expenseDao.insertExpense(expenseWithGroupId)
+//                val expenseWithGroupId = expense.copy(groupId = groupId)
+//                expenseDao.insertExpense(expenseWithGroupId)
+                syncRepository.addExpenseToFirebase(expense)
                 onExpenseAdded()
 
             } catch (e: Exception) {
@@ -250,13 +336,13 @@ class SplitMoneyViewModel @Inject constructor(
 
     fun viewExpensesOfGroup(groupId: String): List<Expense> {
         return groups.value.find { it.id == groupId }?.expenses ?: emptyList()
-
     }
 
     fun editExpense(expenseID: String, newExpense: Expense, onExpenseEdited: () -> Unit) {
         viewModelScope.launch {
             try {
-                expenseDao.updateExpense(newExpense.copy(id = expenseID))
+                syncRepository.updateExpenseInFirebase(newExpense.copy(id = expenseID))
+//                expenseDao.updateExpense(newExpense.copy(id = expenseID))
                 onExpenseEdited()
             } catch (e: Exception) {
                 _errorEvents.emit("Failed to edit expense: ${e.message}")
@@ -269,7 +355,8 @@ class SplitMoneyViewModel @Inject constructor(
         viewModelScope.launch {
 
             try {
-                expenseDao.deleteExpense(expense)
+                syncRepository.deleteExpenseFromFirebase(expense.id)
+//                expenseDao.deleteExpense(expense)
             } catch (e: Exception) {
                 _errorEvents.emit("Failed to delete expense: ${e.message}")
             }

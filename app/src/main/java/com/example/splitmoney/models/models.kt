@@ -13,19 +13,19 @@ import kotlin.collections.emptyList
 
 @Entity(tableName = "expenses")
 data class Expense(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    var description: String,
-    var amount: Double,
-    var payer: String,
-    var groupId: String?
+    @PrimaryKey val id: String = "",
+    var description: String = "",
+    var amount: Double = 0.0,
+    var payer: String = "",
+    var groupId: String? = null
 )
 
 @Immutable
 @Entity(tableName = "groups")
-data class  Group(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    var name: String,
-    var members: List<String>,
+data class Group(
+    @PrimaryKey val id: String = "",
+    var name: String = "",
+    var members: List<String> = emptyList(),
 
 ){
     @Ignore
@@ -45,6 +45,7 @@ data class GroupWithExpenses(
 sealed class UiState {
     data object Loading: UiState()
     data object Success: UiState()
+    data object Empty: UiState()
     data class Error(val message: String): UiState()
 }
 
